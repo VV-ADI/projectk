@@ -29,7 +29,7 @@ const Search = ({ publishedRides = [] }) => {
     if (!mapContainer.current) return;
     const map = new mapboxgl.Map({
   container: mapContainer.current,
-  style: "mapbox://styles/mapbox/dark-v11", // dark theme
+  style: "mapbox://styles/mapbox/satellite-streets-v12", // dark theme
   center: [80.6480, 16.5062], // Vijayawada
   zoom: 11,
 });
@@ -381,6 +381,12 @@ const Search = ({ publishedRides = [] }) => {
                   Gender Preference: {ride.genderPreference || "Any"}
                 </div>
               </div>
+              <button
+                className="mt-4 md:mt-0 md:ml-8 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow transition"
+                // onClick={() => handleBook(ride._id)} // Optional: add booking logic
+              >
+                Book
+              </button>
             </motion.div>
           ))}
         </motion.div>
