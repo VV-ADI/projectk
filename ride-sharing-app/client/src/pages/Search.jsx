@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import mapboxgl from 'mapbox-gl';
 import "mapbox-gl/dist/mapbox-gl.css";
 import axios from 'axios';
+import { useRef, useEffect } from 'react';
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoieWFzd2FudGgyMDA3IiwiYSI6ImNtOHp2Y2pmcTA4ZjUyc3E3bG9qd3QzN2EifQ.-o4c1vzZup3s8JMYdBtvxw";
 mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -23,6 +24,19 @@ const Search = ({ publishedRides = [] }) => {
   const [genderPreference, setGenderPreference] = useState("any");
   const [isLocationLoading, setIsLocationLoading] = useState(false);
 
+  const mapContainer = useRef(null);
+
+  useEffect(() => {
+    if (!mapContainer.current) return;
+    const map = new mapboxgl.Map({
+  container: mapContainer.current,
+  style: "mapbox://styles/mapbox/dark-v11", // dark theme
+  center: [80.6480, 16.5062], // Vijayawada
+  zoom: 11,
+});
+    return () => map.remove();
+  }, []);
+  
   const fetchSuggestions = async (query, setSuggestions) => {
     if (!query) {
       setSuggestions([]);
@@ -307,7 +321,7 @@ const Search = ({ publishedRides = [] }) => {
         </div>
 
         <div className="lg:col-span-2 space-y-8">
-          <div id="map" className="h-80 w-full rounded-2xl overflow-hidden shadow-2xl border border-gray-700/50" />
+          <div ref={mapContainer} id="map" className="h-80 w-full rounded-2xl overflow-hidden shadow-2xl border border-gray-700/50" />
 
           <AnimatePresence mode="wait">
             {loading ? (
