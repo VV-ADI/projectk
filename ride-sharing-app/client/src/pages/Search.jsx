@@ -30,9 +30,9 @@ const Search = ({ publishedRides = [] }) => {
     if (!mapContainer.current) return;
     const map = new mapboxgl.Map({
   container: mapContainer.current,
-  style: "mapbox://styles/mapbox/dark-v11", // dark theme
+  style: "mapbox://styles/mapbox/satellite-streets-v12", // dark theme
   center: [80.6480, 16.5062], // Vijayawada
-  zoom: 11,
+  zoom: 10,
 });
     return () => map.remove();
   }, []);
@@ -78,6 +78,7 @@ const Search = ({ publishedRides = [] }) => {
     }
   };
 
+///////////////////////////////Current Location ///////////////////////////////
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser.");
@@ -116,10 +117,12 @@ const Search = ({ publishedRides = [] }) => {
     );
   };
 
+////////////////////////////////////////Time//////////////////////////
   const formatTime = (time) => {
     return `${time.hour}:${time.minute} ${time.ampm}`;
   };
 
+///////////////////////////////////Frontend Render////////////////////////////////
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-40">
       <motion.div 
@@ -320,9 +323,11 @@ const Search = ({ publishedRides = [] }) => {
           </motion.div>
         </div>
 
+{/* ///////////////////////////////////////////map///////////////////////////////////// */}
+
         <div className="lg:col-span-2 space-y-8">
           <div ref={mapContainer} id="map" className="h-80 w-full rounded-2xl overflow-hidden shadow-2xl border border-gray-700/50" />
-
+                
           <AnimatePresence mode="wait">
             {loading ? (
               <motion.div 

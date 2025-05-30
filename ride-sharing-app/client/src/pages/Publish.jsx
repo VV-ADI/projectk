@@ -299,8 +299,8 @@ const Publish = ({ onRidePublished }) => {
 
                         {/* Gender Preference */}
                         <div>
-                            <label className="block text-gray-400 mb-2 flex items-center">
-                                <UserCircle className="mr-2 text-blue-400" size={20} />
+                            <label className=" text-gray-400 mb-2 flex items-center">
+                                <UserCircle className="mr-2 text-blue-400" width={20} height={20} />
                                 Passenger Gender Preference
                             </label>
                             <div className="grid grid-cols-3 gap-3">
