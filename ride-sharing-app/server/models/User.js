@@ -2,56 +2,27 @@ import mongoose from 'mongoose';
 
 // Define User Schema
 const UserSchema = new mongoose.Schema({
-  name: String,
-  phoneNumber: { type: String, unique: true },
-  password: String,
-  age: Number,
-  gender: String,
+  name: { type: String, required: true },
+  phone: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  email: { type: String },
+  age: { type: Number },
+  gender: { type: String },
+  profileImage: { type: String },
+  // Address fields
+  street: { type: String },
+  city: { type: String },
+  state: { type: String },
+  zipCode: { type: String },
+  country: { type: String },
+  // Vehicle fields
+  vehicleType: { type: String },
+  vehicleNumber: { type: String },
+  vehicleModel: { type: String },
+  vehicleCompany: { type: String },
+  vehicleColor: { type: String },
+  identityVerified: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now }
 });
 
-const User = mongoose.model("User", UserSchema);
-
-// Register API
-app.post("/api/auth/register", async (req, res) => {
-  const { name, phoneNumber, password, age, gender } = req.body;
-
-  // Validate required fields
-  if (!name || !phoneNumber || !password || !age || !gender) {
-    return res.status(400).json({ msg: "All fields are required" });
-  }
-
-  try {
-    // Check if user already exists
-    const existingUser = await User.findOne({ phoneNumber });
-    if (existingUser) {
-      return res.status(400).json({ msg: "User with this phone number already exists" });
-    }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create new user
-    const newUser = new User({
-      name,
-      phoneNumber,
-      password: hashedPassword,
-      age,
-      gender,
-    });
-
-    await newUser.save();
-
-    // Generate JWT token
-    const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-    // Respond with success and token
-    res.json({ token });
-
-  } catch (err) {
-    console.error("Error registering user:", err);
-    res.status(500).json({ msg: "Server error" });
-  }
-});
-
-// Start server
-app.listen(5000, () => console.log("Server running on port 5000"));
+export default mongoose.model("User", UserSchema);
