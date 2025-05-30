@@ -22,13 +22,18 @@ export default function Register() {
     setError("");
 
     try {
-      const response = await axios.post("http://localhost:5000/api/register", {
+      const formData = {
         name,
         phone,
         password,
         age,
         gender,
-      });
+      };
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/auth/register`,
+        formData
+      );
 
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("userId", response.data.user?.id);

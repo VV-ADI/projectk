@@ -18,7 +18,7 @@ const Booking = ({ ride, onClose, onBookingComplete, onSendNotification }) => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        'http://localhost:5000/api/bookings',
+        `${process.env.REACT_APP_API_URL}/api/bookings`,
         {
           rideId: ride._id,
           passengers,
@@ -150,3 +150,8 @@ const Booking = ({ ride, onClose, onBookingComplete, onSendNotification }) => {
 };
 
 export default Booking;
+
+// Replace all API calls and image URLs with environment variable usage
+// Example:
+// axios.get(`${process.env.REACT_APP_API_URL}/api/bookings`)
+// <img src={`${process.env.REACT_APP_API_URL}${booking.imageUrl}`} />

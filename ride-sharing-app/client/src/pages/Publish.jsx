@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Calendar, MapPin, PlusCircle, CheckCircle, Loader, Car, Users, Clock, UserCircle } from 'lucide-react';
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoieWFzd2FudGgyMDA3IiwiYSI6ImNtOHp2Y2pmcTA4ZjUyc3E3bG9qd3QzN2EifQ.-o4c1vzZup3s8JMYdBtvxw";
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const Publish = ({ onRidePublished = () => {} }) => {
     const [from, setFrom] = useState("");
@@ -31,7 +32,7 @@ const Publish = ({ onRidePublished = () => {} }) => {
     useEffect(() => {
         const getTestToken = async () => {
             try {
-                const response = await axios.post('http://localhost:5000/api/auth/login');
+                const response = await axios.post(`${API_URL}/api/auth/login`);
                 localStorage.setItem('token', response.data.token);
             } catch (error) {
                 console.error('Error getting test token:', error);
@@ -100,13 +101,10 @@ const Publish = ({ onRidePublished = () => {} }) => {
             console.log("Submitting rideData:", rideData);
     
             const response = await axios.post(
-                "http://localhost:5000/api/rides",
+                `${process.env.REACT_APP_API_URL}/api/rides/publish`,
                 rideData,
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
+                    headers: { Authorization: `Bearer ${token}` }
                 }
             );
     

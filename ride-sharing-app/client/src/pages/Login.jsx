@@ -17,7 +17,10 @@ const Login = () => {
     setError("");
 
     try {
-      const response = await axios.post("http://localhost:5000/api/login", { phone, password });
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/login`,
+        { phone, password }
+      );
 
       // Store token and user ID in local storage
     const { token, user } = response.data;

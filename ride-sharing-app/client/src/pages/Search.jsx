@@ -11,6 +11,8 @@ import Booking from './Booking';  // Correct case-sensitive import
 const MAPBOX_TOKEN = "pk.eyJ1IjoieWFzd2FudGgyMDA3IiwiYSI6ImNtOHp2Y2pmcTA4ZjUyc3E3bG9qd3QzN2EifQ.-o4c1vzZup3s8JMYdBtvxw";
 mapboxgl.accessToken = MAPBOX_TOKEN;
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Search = ({ publishedRides = [] }) => {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -69,7 +71,7 @@ const Search = ({ publishedRides = [] }) => {
     setSearchResult([]);
     try {
       // Fetch all rides from backend
-      const response = await axios.get('http://localhost:5000/api/rides');
+      const response = await axios.get(`${API_URL}/api/rides`);
       const allRides = response.data.rides || [];
       // Filter rides by entry and exit points (case-insensitive, trimmed)
       const filtered = allRides.filter(ride =>
@@ -129,22 +131,22 @@ const Search = ({ publishedRides = [] }) => {
   };
 
   useEffect(() => {
-  const fetchRides = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/api/rides/others", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setRides(response.data.rides || []);
-    } catch (error) {
-      console.error("Failed to fetch rides:", error);
-      setRides([]);
-    }
-  };
-  fetchRides();
-}, []);
+    const fetchRides = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${API_URL}/api/rides/others`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setRides(response.data.rides || []);
+      } catch (error) {
+        console.error("Failed to fetch rides:", error);
+        setRides([]);
+      }
+    };
+    fetchRides();
+  }, []);
 
 
   // Get current user ID

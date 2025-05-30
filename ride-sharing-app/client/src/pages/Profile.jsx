@@ -34,7 +34,7 @@ const Profile = () => {
     const fetchUserProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:5000/api/user/profile', {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/user/profile`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUser(response.data);
@@ -81,7 +81,7 @@ const Profile = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        'http://localhost:5000/api/user/upload-image',
+        `${process.env.REACT_APP_API_URL}/api/user/upload-image`,
         imgFormData,
         {
           headers: {
@@ -108,7 +108,7 @@ const Profile = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.put(
-        'http://localhost:5000/api/user/profile',
+        `${process.env.REACT_APP_API_URL}/api/user/profile`,
         formData,
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -176,7 +176,7 @@ const Profile = () => {
               >
                 {user?.profileImage ? (
                   <img
-                    src={`http://localhost:5000${user.profileImage}`}
+                    src={`${process.env.REACT_APP_API_URL}${user.profileImage}`}
                     alt="Profile"
                     className="w-32 h-32 rounded-full object-cover border-4 border-blue-500/30"
                   />
