@@ -9,7 +9,9 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
-dotenv.config();
+import User from './models/User.js';
+import Vehicle from './models/Vehicle.js';
+import Ride from './models/Ride.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,6 +20,9 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use(cors());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // Ensure 'uploads' directory exists
 const uploadDir = './uploads';
 if (!fs.existsSync(uploadDir)) {
@@ -33,59 +38,11 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
-app.use(cors());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("✅ MongoDB Connected"))
     .catch((err) => console.log("❌ MongoDB Connection Error:", err));
-
-// User Schema & Model
-const UserSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    phone: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    age: { type: Number }, // <-- Add this
-    gender: { type: String }, // <-- And this
-    profileImage: { type: String, default: null },
-    identityVerified: { type: Boolean, default: false },
-    createdAt: { type: Date, default: Date.now }
-});
-
-
-const User = mongoose.model("User", UserSchema);
-
-// Vehicle Schema & Model
-const VehicleSchema = new mongoose.Schema({
-    number: { type: String, required: true, unique: true },
-    type: { type: String, required: true },
-    model: { type: String, required: true },
-    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    verified: { type: Boolean, default: false },
-    createdAt: { type: Date, default: Date.now }
-});
-
-const Vehicle = mongoose.model("Vehicle", VehicleSchema);
-
-// Ride Schema & Model
-const RideSchema = new mongoose.Schema({
-    driver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    from: { type: String, required: true },
-    to: { type: String, required: true },
-    date: { type: Date, required: true },
-    time: {
-        hour: { type: Number, required: true },
-        minute: { type: Number, required: true },
-        ampm: { type: String, required: true, enum: ['AM', 'PM'] }
-    },
-    seats: { type: Number, required: true },
-    status: { type: String, enum: ['active', 'completed', 'cancelled'], default: 'active' },
-    createdAt: { type: Date, default: Date.now }
-});
-
-const Ride = mongoose.model("Ride", RideSchema);
 
 // Authentication Middleware
 const authMiddleware = (req, res, next) => {
@@ -202,13 +159,28 @@ app.get("/api/user/profile", authMiddleware, async (req, res) => {
 });
 
 // Update User Profile
-// Update User Profile
 app.put("/api/user/profile", authMiddleware, async (req, res) => {
     try {
-        const { name, phone, profileImage, age, gender } = req.body; // Include age & gender
+        const {
+            name, phone, email, age, gender,
+            street, city, state, zipCode, country,
+            vehicleType, vehicleNumber, vehicleModel, vehicleCompany, vehicleColor
+        } = req.body;
+
+        const updateData = {
+            name, phone, email, age, gender,
+            street, city, state, zipCode, country,
+            vehicleType, vehicleNumber, vehicleModel, vehicleCompany, vehicleColor
+        };
+
+        // Remove undefined fields
+        Object.keys(updateData).forEach(key => 
+            (updateData[key] === undefined || updateData[key] === '') && delete updateData[key]
+        );
+
         const user = await User.findByIdAndUpdate(
             req.userId,
-            { name, phone, profileImage, age, gender }, // Update age & gender too
+            updateData,
             { new: true }
         ).select("-password");
 
@@ -299,7 +271,6 @@ app.get("/api/rides/others", authMiddleware, async (req, res) => {
 
 
 // Publish a Ride
-// Publish a Ride
 app.post("/api/rides", authMiddleware, async (req, res) => {
     try {
         const { from, to, date, time, seats, genderPreference } = req.body;
@@ -360,10 +331,7 @@ app.post("/api/rides", authMiddleware, async (req, res) => {
 
         res.json({ success: true, ride: populatedRide });
 
-    } catch (error) {
-        console.error("❌ Ride publish error:", error);
-        console.error("Backend error:", error.response.data);
-        setError(error.response.data.message || "Failed to publish ride");
+    } catch (error) {        console.error("❌ Ride publish error:", error);
         res.status(500).json({
             success: false,
             message: "Error publishing ride"

@@ -1,19 +1,4 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
-
-const app = express();
-app.use(express.json());
-
-// Connect to MongoDB
-mongoose.connect("mongodb://127.0.0.1:27017/ridesharing", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.log("MongoDB Connection Error:", err));
+import mongoose from 'mongoose';
 
 // Define User Schema
 const UserSchema = new mongoose.Schema({
@@ -22,7 +7,7 @@ const UserSchema = new mongoose.Schema({
   password: String,
   age: Number,
   gender: String,
-}, { timestamps: true });
+});
 
 const User = mongoose.model("User", UserSchema);
 
