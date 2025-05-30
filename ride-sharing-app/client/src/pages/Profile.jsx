@@ -11,23 +11,18 @@ const Profile = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [activeSection, setActiveSection] = useState('information');
   const fileInputRef = useRef(null);
-  
+
   const [formData, setFormData] = useState({
-    // Personal Information
     name: '',
     phone: '',
     age: '',
     gender: 'male',
     email: '',
-
-    // Address Information
     street: '',
     city: '',
     state: '',
     zipCode: '',
     country: '',
-
-    // Vehicle Information
     vehicleType: 'car',
     vehicleNumber: '',
     vehicleModel: '',
@@ -37,6 +32,7 @@ const Profile = () => {
 
   useEffect(() => {
     fetchUserProfile();
+    // eslint-disable-next-line
   }, []);
 
   const fetchUserProfile = async () => {
@@ -45,9 +41,10 @@ const Profile = () => {
       const response = await axios.get('http://localhost:5000/api/user/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
       setUser(response.data);
-      setFormData({
+      // Only set formData once, after fetching profile
+      setFormData(prev => ({
+        ...prev,
         name: response.data.name || '',
         phone: response.data.phone || '',
         age: response.data.age || '',
@@ -63,7 +60,7 @@ const Profile = () => {
         vehicleModel: response.data.vehicleModel || '',
         vehicleCompany: response.data.vehicleCompany || '',
         vehicleColor: response.data.vehicleColor || '',
-      });
+      }));
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
@@ -71,11 +68,13 @@ const Profile = () => {
     }
   };
 
+  // FIX: Use functional update to avoid stale state issues
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleImageClick = () => {
@@ -87,14 +86,14 @@ const Profile = () => {
     if (!file) return;
 
     setUploadingImage(true);
-    const formData = new FormData();
-    formData.append('profileImage', file);
+    const imgFormData = new FormData();
+    imgFormData.append('profileImage', file);
 
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
         'http://localhost:5000/api/user/upload-image',
-        formData,
+        imgFormData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -102,7 +101,6 @@ const Profile = () => {
           }
         }
       );
-
       setUser(prev => ({
         ...prev,
         profileImage: response.data.imageUrl
@@ -127,7 +125,6 @@ const Profile = () => {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
-
       setUser(response.data.user);
       setIsEditing(false);
     } catch (error) {
@@ -159,7 +156,6 @@ const Profile = () => {
           Edit Profile
         </motion.button>
       </div>
-
       <div className="grid md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div>
@@ -183,7 +179,6 @@ const Profile = () => {
             <p className="text-lg capitalize">{formData.gender}</p>
           </div>
         </div>
-
         <div className="space-y-4">
           <div>
             <h3 className="text-gray-400 text-sm">Address</h3>
@@ -191,7 +186,6 @@ const Profile = () => {
             <p className="text-lg">{`${formData.city}, ${formData.state} ${formData.zipCode}`}</p>
             <p className="text-lg">{formData.country}</p>
           </div>
-          
           <div>
             <h3 className="text-gray-400 text-sm">Vehicle Information</h3>
             <p className="text-lg capitalize">{`${formData.vehicleType} - ${formData.vehicleCompany} ${formData.vehicleModel}`}</p>
@@ -216,7 +210,6 @@ const Profile = () => {
           Cancel
         </motion.button>
       </div>
-
       <div className="flex gap-4 border-b border-gray-700">
         {['information', 'address', 'vehicle'].map((section) => (
           <button
@@ -232,7 +225,6 @@ const Profile = () => {
           </button>
         ))}
       </div>
-
       <form onSubmit={handleSubmit} className="space-y-6">
         <AnimatePresence mode="wait">
           {activeSection === 'information' && (
@@ -259,7 +251,6 @@ const Profile = () => {
                   <User className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 </div>
               </div>
-
               <div>
                 <label className="block text-gray-300 text-sm font-medium mb-2">
                   Phone Number
@@ -276,7 +267,6 @@ const Profile = () => {
                   <Phone className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 </div>
               </div>
-
               <div>
                 <label className="block text-gray-300 text-sm font-medium mb-2">
                   Email
@@ -290,7 +280,6 @@ const Profile = () => {
                   placeholder="Enter your email"
                 />
               </div>
-
               <div>
                 <label className="block text-gray-300 text-sm font-medium mb-2">
                   Age
@@ -307,7 +296,6 @@ const Profile = () => {
                   <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 </div>
               </div>
-
               <div>
                 <label className="block text-gray-300 text-sm font-medium mb-2">
                   Gender
@@ -325,7 +313,6 @@ const Profile = () => {
               </div>
             </motion.div>
           )}
-
           {activeSection === 'address' && (
             <motion.div
               key="address"
@@ -350,7 +337,6 @@ const Profile = () => {
                   <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
@@ -365,7 +351,6 @@ const Profile = () => {
                     placeholder="Enter city"
                   />
                 </div>
-
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
                     State
@@ -380,7 +365,6 @@ const Profile = () => {
                   />
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
@@ -395,7 +379,6 @@ const Profile = () => {
                     placeholder="Enter ZIP code"
                   />
                 </div>
-
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
                     Country
@@ -412,7 +395,6 @@ const Profile = () => {
               </div>
             </motion.div>
           )}
-
           {activeSection === 'vehicle' && (
             <motion.div
               key="vehicle"
@@ -435,7 +417,6 @@ const Profile = () => {
                   <option value="bike">Bike</option>
                 </select>
               </div>
-
               <div>
                 <label className="block text-gray-300 text-sm font-medium mb-2">
                   Vehicle Number
@@ -452,7 +433,6 @@ const Profile = () => {
                   <Car className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
@@ -467,7 +447,6 @@ const Profile = () => {
                     placeholder="Enter company name"
                   />
                 </div>
-
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
                     Vehicle Model
@@ -482,7 +461,6 @@ const Profile = () => {
                   />
                 </div>
               </div>
-
               <div>
                 <label className="block text-gray-300 text-sm font-medium mb-2">
                   Vehicle Color
@@ -499,7 +477,6 @@ const Profile = () => {
             </motion.div>
           )}
         </AnimatePresence>
-
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -521,7 +498,7 @@ const Profile = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-40">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-40">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -530,7 +507,6 @@ const Profile = () => {
         <h1 className="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
           Profile Settings
         </h1>
-
         <div className="bg-gray-800/50 backdrop-blur-lg p-8 rounded-2xl shadow-2xl border border-gray-700">
           {/* Profile Image Section */}
           <div className="flex justify-center mb-8">
@@ -567,7 +543,6 @@ const Profile = () => {
               )}
             </div>
           </div>
-
           {isEditing ? <EditProfile /> : <ViewProfile />}
         </div>
       </motion.div>

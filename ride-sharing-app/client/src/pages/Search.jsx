@@ -29,11 +29,11 @@ const Search = ({ publishedRides = [] }) => {
   useEffect(() => {
     if (!mapContainer.current) return;
     const map = new mapboxgl.Map({
-  container: mapContainer.current,
-  style: "mapbox://styles/mapbox/satellite-streets-v12", // dark theme
-  center: [80.6480, 16.5062], // Vijayawada
-  zoom: 10,
-});
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/satellite-streets-v12",
+      center: [80.6480, 16.5062], // Longitude, Latitude for Vijayawada
+      zoom: 12,
+    });
     return () => map.remove();
   }, []);
   
