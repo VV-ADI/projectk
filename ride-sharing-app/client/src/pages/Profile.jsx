@@ -31,45 +31,43 @@ const Profile = () => {
   });
 
   useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('http://localhost:5000/api/user/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setUser(response.data);
+        setFormData(prev => ({
+          ...prev,
+          name: response.data.name || '',
+          phone: response.data.phone || '',
+          age: response.data.age || '',
+          gender: response.data.gender || 'male',
+          email: response.data.email || '',
+          street: response.data.street || '',
+          city: response.data.city || '',
+          state: response.data.state || '',
+          zipCode: response.data.zipCode || '',
+          country: response.data.country || '',
+          vehicleType: response.data.vehicleType || 'car',
+          vehicleNumber: response.data.vehicleNumber || '',
+          vehicleModel: response.data.vehicleModel || '',
+          vehicleCompany: response.data.vehicleCompany || '',
+          vehicleColor: response.data.vehicleColor || '',
+        }));
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchUserProfile();
-    // eslint-disable-next-line
   }, []);
 
-  const fetchUserProfile = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/user/profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUser(response.data);
-      // Only set formData once, after fetching profile
-      setFormData(prev => ({
-        ...prev,
-        name: response.data.name || '',
-        phone: response.data.phone || '',
-        age: response.data.age || '',
-        gender: response.data.gender || 'male',
-        email: response.data.email || '',
-        street: response.data.street || '',
-        city: response.data.city || '',
-        state: response.data.state || '',
-        zipCode: response.data.zipCode || '',
-        country: response.data.country || '',
-        vehicleType: response.data.vehicleType || 'car',
-        vehicleNumber: response.data.vehicleNumber || '',
-        vehicleModel: response.data.vehicleModel || '',
-        vehicleCompany: response.data.vehicleCompany || '',
-        vehicleColor: response.data.vehicleColor || '',
-      }));
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // FIX: Use functional update to avoid stale state issues
   const handleInputChange = (e) => {
+    e.preventDefault();
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -137,69 +135,106 @@ const Profile = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        <Loader className="animate-spin text-blue-500" size={40} />
+        <motion.div
+          animate={{ 
+            rotate: 360,
+            scale: [1, 1.2, 1]
+          }}
+          transition={{ 
+            rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+            scale: { duration: 1, repeat: Infinity }
+          }}
+        >
+          <Loader className="text-blue-500" size={40} />
+        </motion.div>
       </div>
     );
   }
 
   const ViewProfile = () => (
-    <div className="space-y-8">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-8"
+    >
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Profile Information</h2>
+        <h2 className="text-2xl font-semibold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+          Profile Information
+        </h2>
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsEditing(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 shadow-lg hover:shadow-blue-500/20"
         >
           <Edit2 size={18} />
           Edit Profile
         </motion.button>
       </div>
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-4">
+
+      <div className="grid md:grid-cols-2 gap-8">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+          className="space-y-6 bg-gray-800/30 p-6 rounded-xl border border-gray-700/50"
+        >
           <div>
             <h3 className="text-gray-400 text-sm">Full Name</h3>
-            <p className="text-lg">{formData.name}</p>
+            <p className="text-lg font-medium text-white">{formData.name}</p>
           </div>
           <div>
             <h3 className="text-gray-400 text-sm">Phone</h3>
-            <p className="text-lg">{formData.phone}</p>
+            <p className="text-lg font-medium text-white">{formData.phone}</p>
           </div>
           <div>
             <h3 className="text-gray-400 text-sm">Email</h3>
-            <p className="text-lg">{formData.email}</p>
+            <p className="text-lg font-medium text-white">{formData.email}</p>
           </div>
           <div>
             <h3 className="text-gray-400 text-sm">Age</h3>
-            <p className="text-lg">{formData.age}</p>
+            <p className="text-lg font-medium text-white">{formData.age}</p>
           </div>
           <div>
             <h3 className="text-gray-400 text-sm">Gender</h3>
-            <p className="text-lg capitalize">{formData.gender}</p>
+            <p className="text-lg font-medium text-white capitalize">{formData.gender}</p>
           </div>
-        </div>
-        <div className="space-y-4">
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="space-y-6 bg-gray-800/30 p-6 rounded-xl border border-gray-700/50"
+        >
           <div>
             <h3 className="text-gray-400 text-sm">Address</h3>
-            <p className="text-lg">{formData.street}</p>
-            <p className="text-lg">{`${formData.city}, ${formData.state} ${formData.zipCode}`}</p>
-            <p className="text-lg">{formData.country}</p>
+            <p className="text-lg font-medium text-white">{formData.street}</p>
+            <p className="text-lg font-medium text-white">{`${formData.city}, ${formData.state} ${formData.zipCode}`}</p>
+            <p className="text-lg font-medium text-white">{formData.country}</p>
           </div>
           <div>
             <h3 className="text-gray-400 text-sm">Vehicle Information</h3>
-            <p className="text-lg capitalize">{`${formData.vehicleType} - ${formData.vehicleCompany} ${formData.vehicleModel}`}</p>
-            <p className="text-lg">{`${formData.vehicleColor} - ${formData.vehicleNumber}`}</p>
+            <p className="text-lg font-medium text-white capitalize">{`${formData.vehicleType} - ${formData.vehicleCompany} ${formData.vehicleModel}`}</p>
+            <p className="text-lg font-medium text-white">{`${formData.vehicleColor} - ${formData.vehicleNumber}`}</p>
           </div>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 
   const EditProfile = () => (
-    <div className="space-y-8">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-8"
+    >
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Edit Profile</h2>
+        <h2 className="text-2xl font-semibold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+          Edit Profile
+        </h2>
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -210,21 +245,25 @@ const Profile = () => {
           Cancel
         </motion.button>
       </div>
+
       <div className="flex gap-4 border-b border-gray-700">
         {['information', 'address', 'vehicle'].map((section) => (
-          <button
+          <motion.button
             key={section}
+            whileHover={{ y: -2 }}
+            whileTap={{ y: 0 }}
             onClick={() => setActiveSection(section)}
-            className={`px-4 py-2 -mb-px font-medium capitalize ${
+            className={`px-4 py-2 -mb-px font-medium capitalize transition-all duration-300 ${
               activeSection === section
                 ? 'text-blue-500 border-b-2 border-blue-500'
                 : 'text-gray-400 hover:text-gray-300'
             }`}
           >
             {section}
-          </button>
+          </motion.button>
         ))}
       </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <AnimatePresence mode="wait">
           {activeSection === 'information' && (
@@ -313,6 +352,7 @@ const Profile = () => {
               </div>
             </motion.div>
           )}
+
           {activeSection === 'address' && (
             <motion.div
               key="address"
@@ -395,6 +435,7 @@ const Profile = () => {
               </div>
             </motion.div>
           )}
+
           {activeSection === 'vehicle' && (
             <motion.div
               key="vehicle"
@@ -477,15 +518,27 @@ const Profile = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={saving}
-          className="w-full flex items-center justify-center p-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold rounded-xl transition duration-300 shadow-lg hover:shadow-xl disabled:opacity-50"
+          className="w-full flex items-center justify-center p-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-xl transition duration-300 shadow-lg hover:shadow-xl disabled:opacity-50"
         >
           {saving ? (
-            <Loader className="animate-spin" size={24} />
+            <motion.div
+              animate={{ 
+                rotate: 360,
+                scale: [1, 1.2, 1]
+              }}
+              transition={{ 
+                rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+                scale: { duration: 1, repeat: Infinity }
+              }}
+            >
+              <Loader size={24} />
+            </motion.div>
           ) : (
             <>
               <Save size={24} />
@@ -494,23 +547,36 @@ const Profile = () => {
           )}
         </motion.button>
       </form>
-    </div>
+    </motion.div>
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-40">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8 lg:p-12 pb-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-4xl mx-auto"
       >
-        <h1 className="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
+        <motion.h1 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text"
+        >
           Profile Settings
-        </h1>
-        <div className="bg-gray-800/50 backdrop-blur-lg p-8 rounded-2xl shadow-2xl border border-gray-700">
-          {/* Profile Image Section */}
+        </motion.h1>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-gray-800/50 backdrop-blur-lg p-8 rounded-2xl shadow-2xl border border-gray-700"
+        >
           <div className="flex justify-center mb-8">
-            <div className="relative">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              className="relative"
+            >
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 className="relative cursor-pointer group"
@@ -525,9 +591,13 @@ const Profile = () => {
                 ) : (
                   <UserCircle size={128} className="text-blue-500/70" />
                 )}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full"
+                >
                   <Camera className="text-white" size={24} />
-                </div>
+                </motion.div>
               </motion.div>
               <input
                 type="file"
@@ -537,14 +607,32 @@ const Profile = () => {
                 onChange={handleImageUpload}
               />
               {uploadingImage && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
-                  <Loader className="animate-spin text-white" size={24} />
-                </div>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full"
+                >
+                  <motion.div
+                    animate={{ 
+                      rotate: 360,
+                      scale: [1, 1.2, 1]
+                    }}
+                    transition={{ 
+                      rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+                      scale: { duration: 1, repeat: Infinity }
+                    }}
+                  >
+                    <Loader className="text-white" size={24} />
+                  </motion.div>
+                </motion.div>
               )}
-            </div>
+            </motion.div>
           </div>
-          {isEditing ? <EditProfile /> : <ViewProfile />}
-        </div>
+          
+          <AnimatePresence mode="wait">
+            {isEditing ? <EditProfile /> : <ViewProfile />}
+          </AnimatePresence>
+        </motion.div>
       </motion.div>
     </div>
   );
