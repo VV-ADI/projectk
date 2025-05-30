@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { X, Users, Phone, MessageSquare, Loader } from 'lucide-react';
 import axios from 'axios';
 
-const Booking = ({ ride, onClose, onBookingComplete }) => {
+const Booking = ({ ride, onClose, onBookingComplete, onSendNotification }) => {
   const [passengers, setPassengers] = useState(1);
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
@@ -31,6 +31,13 @@ const Booking = ({ ride, onClose, onBookingComplete }) => {
       );
 
       if (response.data.success) {
+        // Notify the rider (publisher) after successful booking
+        if (onSendNotification) {
+          onSendNotification(
+            `You have a new booking request for your ride from ${ride.from} to ${ride.to}. Please confirm or reject.`,
+            ride
+          );
+        }
         onBookingComplete(response.data.booking);
         onClose();
       }
