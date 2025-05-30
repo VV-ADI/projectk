@@ -280,6 +280,24 @@ app.get("/api/vehicles", authMiddleware, async (req, res) => {
     }
 });
 
+// Get all rides except the ones published by current user
+app.get("/api/rides/others", authMiddleware, async (req, res) => {
+  try {
+    const rides = await Ride.find({
+      driver: { $ne: req.userId },
+      status: 'active'
+    })
+    .populate('driver', '-password')
+    .sort({ createdAt: -1 });
+
+    res.json({ success: true, rides });
+  } catch (error) {
+    console.error("Error fetching rides from other users:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch rides" });
+  }
+});
+
+
 // Publish a Ride
 // Publish a Ride
 app.post("/api/rides", authMiddleware, async (req, res) => {
@@ -289,6 +307,7 @@ app.post("/api/rides", authMiddleware, async (req, res) => {
         // ✅ Step 1: Log incoming data
         console.log("🚗 Incoming ride publish data:", {
             from, to, date, time, seats, genderPreference
+            
         });
 
         // ✅ Step 2: Check for all required fields

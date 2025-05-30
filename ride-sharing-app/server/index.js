@@ -4,6 +4,7 @@ const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+require('./models/Booking');
 
 const app = express();
 app.use(express.json());
@@ -24,6 +25,12 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model("User", UserSchema);
 
 const RideSchema = new mongoose.Schema({
+  rideId: {
+    type: String,
+    unique: true,
+    required: true,
+    default: () => Math.random().toString(36).substr(2, 9).toUpperCase()
+  },
   from: String,
   to: String,
   date: Date,
@@ -34,7 +41,7 @@ const RideSchema = new mongoose.Schema({
   },
   seats: Number,
   genderPreference: String,
-  // Optionally, add driver: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  driver: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
 const Ride = mongoose.model("Ride", RideSchema);
@@ -93,12 +100,47 @@ app.post("/api/login", async (req, res) => {
 // Rides API
 app.get("/api/rides", async (req, res) => {
   try {
-    const rides = await Ride.find().sort({ createdAt: -1 });
+    const rides = await Ride.find().populate('driver').sort({ createdAt: -1 });
     res.json({ success: true, rides });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error fetching rides" });
   }
 });
 
+
+// Example ride creation endpoint
+app.post("/api/rides", authenticate, async (req, res) => {
+  try {
+    const { from, to, date, time, seats, genderPreference } = req.body;
+    const driver = req.user.userId;
+
+    const newRide = new Ride({
+      rideId: Math.random().toString(36).substr(2, 9).toUpperCase(), // Generate unique ID
+      from,
+      to,
+      date,
+      time,
+      seats,
+      genderPreference,
+      driver
+    });
+
+    await newRide.save();
+    res.json({ 
+      success: true, 
+      ride: {
+        ...newRide._doc,
+        rideId: newRide.rideId
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: "Error creating ride",
+      error: error.message 
+    });
+  }
+});
+
 // Start server
-app.listen(5000, () => console.log("Server running on port 5000"));
+app.listen(5000,() => console.log("Server running on port 5000"));
