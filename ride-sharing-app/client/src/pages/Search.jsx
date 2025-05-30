@@ -24,8 +24,6 @@ const Search = ({ publishedRides = [] }) => {
   const [genderPreference, setGenderPreference] = useState("any");
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [selectedRide, setSelectedRide] = useState(null);
-  const [notifications, setNotifications] = useState([]);
-  const [showPanel, setShowPanel] = useState(false);
 
   const mapContainer = useRef(null);
 
@@ -65,18 +63,22 @@ const Search = ({ publishedRides = [] }) => {
 
   const handleSearch = async () => {
     setLoading(true);
+    setSearchPerformed(false);
+    setSearchResult([]);
     try {
-      const response = await axios.get("http://10.1.92.28:5000/api/rides", {
-        params: {
-          from,
-          to,
-          date: date ? date.toISOString() : undefined,
-          genderPreference,
-        },
-      });
-      setRides(response.data.rides || []);
+      // Fetch all rides from backend
+      const response = await axios.get('http://localhost:5000/api/rides');
+      const allRides = response.data.rides || [];
+      // Filter rides by entry and exit points (case-insensitive, trimmed)
+      const filtered = allRides.filter(ride =>
+        ride.from.trim().toLowerCase() === from.trim().toLowerCase() &&
+        ride.to.trim().toLowerCase() === to.trim().toLowerCase()
+      );
+      setSearchResult(filtered);
+      setSearchPerformed(true);
     } catch (error) {
-      setRides([]);
+      setSearchResult([]);
+      setSearchPerformed(true);
     } finally {
       setLoading(false);
     }
@@ -159,120 +161,19 @@ const currentUserId = currentUser?._id;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-40">
-      {/* Notification Icon */}
-      <div
-        style={{
-          position: "fixed",
-          top: 20,
-          right: 20,
-          cursor: "pointer",
-          zIndex: 1100,
-        }}
-        onClick={() => setShowPanel(!showPanel)}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="mb-12 text-center"
       >
-        <Bell color="#60a5fa" size={28} /> {/* blue-400 */}
-        {notifications.length > 0 && (
-          <span
-            style={{
-              position: "absolute",
-              top: -6,
-              right: -6,
-              background: "linear-gradient(90deg, #6366f1 0%, #a78bfa 100%)", // indigo-500 to purple-400
-              color: "#fff",
-              borderRadius: "50%",
-              padding: "2px 8px",
-              fontSize: "12px",
-              fontWeight: "bold",
-              border: "2px solid #1e293b", // slate-800
-              boxShadow: "0 0 8px #6366f155",
-            }}
-          >
-            {notifications.length}
-          </span>
-        )}
-      </div>
-      /* Notification Panel */
-        {showPanel && (
-          <div
-            style={{
-          position: "fixed",
-          top: 56,
-          right: 20,
-          background: "linear-gradient(135deg, #1e293b 80%, #312e81 100%)",
-          border: "1px solid #334155",
-          borderRadius: "16px", // bigger radius
-          boxShadow: "0 4px 32px #000a",
-          width: "340px", // wider panel
-          zIndex: 1200,
-          // more padding
-          color: "#e0e7ef",
-          backdropFilter: "blur(8px)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <h4 style={{
-            color: "#a78bfa",
-            fontWeight: 700,
-            letterSpacing: 1,
-            fontSize: 20,
-            margin: 0,
-          }}>Notifications</h4>
-          <button
-            onClick={() => setNotifications([])}
-            style={{
-              background: "rgba(99,102,241,0.15)",
-              color: "#a78bfa",
-              border: "none",
-              borderRadius: 8,
-              padding: "4px 12px",
-              fontWeight: 600,
-              fontSize: 13,
-              cursor: "pointer",
-              transition: "background 0.2s",
-            }}
-            title="Clear all notifications"
-          >
-            Clear
-          </button>
-            </div>
-            <ul style={{ maxHeight: 260, overflowY: "auto", margin: 0, padding: 0 }}>
-          {notifications.length === 0 ? (
-            <li style={{ color: "#64748b", listStyle: "none" }}>No notifications</li>
-          ) : (
-            notifications.map((n) => (
-              <li
-                key={n.id}
-                style={{
-                  marginBottom: 12,
-                  listStyle: "none",
-                  background: "rgba(99,102,241,0.10)",
-                  borderRadius: 10,
-                  padding: "10px 14px",
-                  color: "#c7d2fe",
-                  fontSize: 16,
-                }}
-              >
-                {n.message}
-              </li>
-            ))
-          )}
-            </ul>
-          </div>
-        )}
-
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-12 text-center"
-        >
-          <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
-            Find Your Perfect Ride
-          </h1>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Discover convenient and affordable rides with friendly drivers heading your way
-          </p>
-        </motion.div>
+        <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
+          Find Your Perfect Ride
+        </h1>
+        <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+          Discover convenient and affordable rides with friendly drivers heading your way
+        </p>
+      </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
@@ -483,6 +384,76 @@ const currentUserId = currentUser?._id;
             <div className="absolute top-2 left-2 w-16 h-16 rounded-full border-4 border-t-transparent border-r-purple-500 border-b-transparent border-l-blue-400 animate-spin-slow"></div>
           </div>
         </motion.div>
+      ) : searchPerformed ? (
+        searchResult.length > 0 ? (
+          <motion.div>
+            {searchResult.filter(ride => {
+              if (!ride.driver) return false;
+              if (typeof ride.driver === "object") {
+                return ride.driver._id !== currentUserId;
+              }
+              return ride.driver !== currentUserId;
+            }).length > 0 ? (
+              searchResult.filter(ride => {
+                if (!ride.driver) return false;
+                if (typeof ride.driver === "object") {
+                  return ride.driver._id !== currentUserId;
+                }
+                return ride.driver !== currentUserId;
+              }).map((ride) => (
+                <motion.div
+                  key={ride._id}
+                  className="bg-gray-900 rounded-xl p-6 mb-4 shadow-lg border border-blue-600 flex flex-col md:flex-row justify-between items-center"
+                  initial={{ opacity: 1, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 1, y: 20 }}
+                  style={{ opacity: 1 }}
+                >
+                  <div>
+                    <div className="text-xl font-bold text-blue-400">
+                      {ride.from} <ArrowRight className="inline mx-2" /> {ride.to}
+                    </div>
+                    <div className="text-white mt-1">
+                      <span>Date: {ride.date ? new Date(ride.date).toLocaleDateString() : "N/A"}</span>
+                      <span className="ml-4">Time: {ride.time ? `${ride.time.hour}:${ride.time.minute} ${ride.time.ampm}` : "N/A"}</span>
+                      <span className="ml-4">Seats: {ride.seats}</span>
+                    </div>
+                    <div className="text-blue-200 mt-1">
+                      Gender Preference: {ride.genderPreference || "Any"}
+                    </div>
+                  </div>
+                  <button
+                    className="mt-4 md:mt-0 md:ml-8 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow transition"
+                    onClick={() => setSelectedRide(ride)}
+                  >
+                    Book
+                  </button>
+                </motion.div>
+              ))
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-gray-800/40 backdrop-blur-sm rounded-xl border border-gray-700/50 p-8 text-center"
+              >
+                <Ban size={60} className="text-yellow-500/80 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-white mb-2">No Other Rides Available</h3>
+                <p className="text-gray-400">All current rides are published by you. Try searching for different locations or dates.</p>
+              </motion.div>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 1, scale: 1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 1, scale: 0.9 }}
+            className="bg-gray-800/40 backdrop-blur-sm rounded-xl border border-gray-700/50 p-8 text-center"
+          >
+            <Ban size={60} className="text-red-500/80 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-white mb-2">No Rides Available</h3>
+            <p className="text-gray-400">Try different locations or dates</p>
+          </motion.div>
+        )
       ) : rides.length > 0 ? (
         <motion.div>
           {(() => {
