@@ -32,7 +32,10 @@ const Publish = ({ onRidePublished = () => {} }) => {
     useEffect(() => {
         const getTestToken = async () => {
             try {
-                const response = await axios.post(`${API_URL}/api/auth/login`);
+                const response = await axios.post(
+      `${process.env.REACT_APP_API_URL}/api/auth/login`,
+      { email, password }
+    );
                 localStorage.setItem('token', response.data.token);
             } catch (error) {
                 console.error('Error getting test token:', error);
@@ -101,12 +104,12 @@ const Publish = ({ onRidePublished = () => {} }) => {
             console.log("Submitting rideData:", rideData);
     
             const response = await axios.post(
-                `${process.env.REACT_APP_API_URL}/api/rides/publish`,
-                rideData,
-                {
-                    headers: { Authorization: `Bearer ${token}` }
-                }
-            );
+      `${process.env.REACT_APP_API_URL}/api/rides/publish`,
+      rideData,
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
     
             if (response.data.success) {
                 setSuccess(true);
