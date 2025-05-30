@@ -81,7 +81,6 @@ const RideSchema = new mongoose.Schema({
         ampm: { type: String, required: true, enum: ['AM', 'PM'] }
     },
     seats: { type: Number, required: true },
-    vehicle: { type: mongoose.Schema.Types.ObjectId, ref: 'Vehicle', required: true },
     status: { type: String, enum: ['active', 'completed', 'cancelled'], default: 'active' },
     createdAt: { type: Date, default: Date.now }
 });
@@ -282,32 +281,46 @@ app.get("/api/vehicles", authMiddleware, async (req, res) => {
 });
 
 // Publish a Ride
+// Publish a Ride
 app.post("/api/rides", authMiddleware, async (req, res) => {
     try {
-        const { from, to, date, time, seats, vehicleId } = req.body;
+        const { from, to, date, time, seats, genderPreference } = req.body;
 
-        // ✅ Log input to debug
-        console.log("Incoming ride publish data:", { from, to, date, time, seats, vehicleId });
+        // ✅ Step 1: Log incoming data
+        console.log("🚗 Incoming ride publish data:", {
+            from, to, date, time, seats, genderPreference
+        });
 
-        // ✅ Validate required fields
-        if (!from || !to || !date || !time || !seats || !vehicleId) {
-            return res.status(400).json({ success: false, message: "All fields are required" });
+        // ✅ Step 2: Check for all required fields
+        if (!from || !to || !date || !time || !seats) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required"
+            });
         }
 
-        // ✅ Validate time format
+        // ✅ Step 3: Validate time format
         if (
             typeof time.hour !== 'number' ||
             typeof time.minute !== 'number' ||
             !['AM', 'PM'].includes(time.ampm)
         ) {
-            return res.status(400).json({ success: false, message: "Invalid time format" });
+            return res.status(400).json({
+                success: false,
+                message: "Invalid time format"
+            });
         }
 
-        const vehicle = await Vehicle.findOne({ _id: vehicleId, owner: req.userId });
-        if (!vehicle) {
-            return res.status(404).json({ success: false, message: "Vehicle not found or not owned by user" });
-        }
+        // ✅ Step 4: (REMOVE vehicle check)
+        // const vehicle = await Vehicle.findOne({ owner: req.userId });
+        // if (!vehicle) {
+        //     return res.status(404).json({
+        //         success: false,
+        //         message: "Vehicle not found or not owned by user"
+        //     });
+        // }
 
+        // ✅ Step 5: Create ride (REMOVE vehicleId from ride creation)
         const ride = new Ride({
             driver: req.userId,
             from,
@@ -315,20 +328,27 @@ app.post("/api/rides", authMiddleware, async (req, res) => {
             date: new Date(date),
             time,
             seats,
-            vehicle: vehicleId
+            genderPreference,
+            // vehicle: vehicle._id, // <-- REMOVE THIS LINE
         });
 
         await ride.save();
 
+        // ✅ Step 6: Populate and return (REMOVE .populate('vehicle'))
         const populatedRide = await Ride.findById(ride._id)
-            .populate('driver', '-password')
-            .populate('vehicle');
+            .populate('driver', '-password');
+            // .populate('vehicle'); // <-- REMOVE THIS LINE
 
         res.json({ success: true, ride: populatedRide });
 
     } catch (error) {
         console.error("❌ Ride publish error:", error);
-        res.status(500).json({ success: false, message: "Error publishing ride" });
+        console.error("Backend error:", error.response.data);
+        setError(error.response.data.message || "Failed to publish ride");
+        res.status(500).json({
+            success: false,
+            message: "Error publishing ride"
+        });
     }
 });
 
@@ -348,7 +368,6 @@ app.get("/api/rides/search", async (req, res) => {
             status: 'active'
         })
         .populate('driver', '-password')
-        .populate('vehicle')
         .sort({ date: 1, 'time.hour': 1, 'time.minute': 1 });
 
         res.json({ success: true, rides });
@@ -363,13 +382,32 @@ app.get("/api/rides/published", authMiddleware, async (req, res) => {
     try {
         const rides = await Ride.find({ driver: req.userId })
             .populate('driver', '-password')
-            .populate('vehicle')
             .sort({ createdAt: -1 });
 
         res.json({ success: true, rides });
     } catch (error) {
         console.error("Published rides fetch error:", error);
         res.status(500).json({ success: false, message: "Error fetching published rides" });
+    }
+});
+
+// Get All Rides
+app.get("/api/rides", async (req, res) => {
+    try {
+        const rides = await Ride.find().sort({ createdAt: -1 });
+        res.json({ success: true, rides });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Error fetching rides" });
+    }
+});
+
+// MongoDB query for testing
+app.get("/api/rides/test", async (req, res) => {
+    try {
+        const rides = await Ride.find().sort({ createdAt: -1 });
+        res.json({ success: true, rides });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Error fetching rides" });
     }
 });
 

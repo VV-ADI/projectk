@@ -23,6 +23,22 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", UserSchema);
 
+const RideSchema = new mongoose.Schema({
+  from: String,
+  to: String,
+  date: Date,
+  time: {
+    hour: Number,
+    minute: Number,
+    ampm: String
+  },
+  seats: Number,
+  genderPreference: String,
+  // Optionally, add driver: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+}, { timestamps: true });
+
+const Ride = mongoose.model("Ride", RideSchema);
+
 // Register API
 app.post("/api/register", async (req, res) => {
   const { name, phone, password } = req.body;
@@ -72,6 +88,16 @@ app.post("/api/login", async (req, res) => {
     message: "Login successful",
     token, // Send the JWT token to the client
   });
+});
+
+// Rides API
+app.get("/api/rides", async (req, res) => {
+  try {
+    const rides = await Ride.find().sort({ createdAt: -1 });
+    res.json({ success: true, rides });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching rides" });
+  }
 });
 
 // Start server
