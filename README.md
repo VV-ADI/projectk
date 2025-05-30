@@ -4,6 +4,11 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ## Available Scripts
 
+## Before starting install the node_modules by npm install
+
+## do the same in the ride-sharing-app/client and ride-sharing-app/server 
+
+
 In the project directory, you can run:
 
 ### `npm start`
