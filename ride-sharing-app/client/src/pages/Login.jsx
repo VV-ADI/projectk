@@ -20,9 +20,10 @@ const Login = () => {
       const response = await axios.post("http://localhost:5000/api/login", { phone, password });
 
       // Store token and user ID in local storage
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("userId", response.data.userId); 
-      localStorage.setItem("userName", response.data.userName); // Ensure correct API response key
+    const { token, user } = response.data;
+
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user)); // this is the key part!
 
       navigate("/dashboard"); 
     } catch (err) {

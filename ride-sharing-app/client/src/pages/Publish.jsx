@@ -388,6 +388,23 @@ const Publish = ({ onRidePublished = () => {} }) => {
         }
     };
 
+    // Generate a unique ride code (similar to username) when publishing
+    const [rideCode, setRideCode] = useState("");
+
+    // Generate ride code only once per ride publish
+    useEffect(() => {
+        if (currentStep === 3 && !rideCode) {
+            // Simple code: first 3 letters of 'from' + 3 of 'to' + random 3 digits
+            const fromPart = (from || "").replace(/\s/g, "").substring(0, 3).toUpperCase();
+            const toPart = (to || "").replace(/\s/g, "").substring(0, 3).toUpperCase();
+            const randPart = Math.floor(100 + Math.random() * 900); // 3 digits
+            setRideCode(`${fromPart}${toPart}${randPart}`);
+        }
+        // Reset code if user goes back to step 1
+        if (currentStep < 3 && rideCode) setRideCode("");
+        // eslint-disable-next-line
+    }, [currentStep, from, to]);
+
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6 pb-40">
             <motion.div
@@ -431,6 +448,17 @@ const Publish = ({ onRidePublished = () => {} }) => {
                 <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-xl shadow-xl border border-gray-700">
                     <form onSubmit={handleSubmit}>
                         {renderStep()}
+
+                        {/* Show ride code only on review step and only for other users (not the creator) */}
+                        {currentStep === 3 && rideCode && (
+                            <div className="mt-6 text-center">
+                                <span className="text-gray-400 text-sm">Ride Code (for other users):</span>
+                                <div className="text-2xl font-mono font-bold tracking-widest text-blue-400 mt-1 select-all">
+                                    {rideCode}
+                                </div>
+                            </div>
+                            
+                        )}
 
                         {/* Navigation Buttons */}
                         <div className="flex justify-between mt-8">

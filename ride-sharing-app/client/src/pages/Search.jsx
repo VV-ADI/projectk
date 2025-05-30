@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import mapboxgl from 'mapbox-gl';
 import "mapbox-gl/dist/mapbox-gl.css";
 import axios from 'axios';
+import Booking from './Booking';  // Correct case-sensitive import
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoieWFzd2FudGgyMDA3IiwiYSI6ImNtOHp2Y2pmcTA4ZjUyc3E3bG9qd3QzN2EifQ.-o4c1vzZup3s8JMYdBtvxw";
 mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -22,6 +23,7 @@ const Search = ({ publishedRides = [] }) => {
   const [activeInput, setActiveInput] = useState(null);
   const [genderPreference, setGenderPreference] = useState("any");
   const [isLocationLoading, setIsLocationLoading] = useState(false);
+  const [selectedRide, setSelectedRide] = useState(null);
 
   const mapContainer = useRef(null);
 
@@ -62,7 +64,7 @@ const Search = ({ publishedRides = [] }) => {
   const handleSearch = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("http://localhost:5000/api/rides", {
+      const response = await axios.get("http://10.1.92.28:5000/api/rides", {
         params: {
           from,
           to,
@@ -121,16 +123,27 @@ const Search = ({ publishedRides = [] }) => {
   };
 
   useEffect(() => {
-    const fetchRides = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/api/rides");
-        setRides(response.data.rides || []);
-      } catch (error) {
-        setRides([]);
-      }
-    };
-    fetchRides();
-  }, []);
+  const fetchRides = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get("http://localhost:5000/api/rides/others", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setRides(response.data.rides || []);
+    } catch (error) {
+      console.error("Failed to fetch rides:", error);
+      setRides([]);
+    }
+  };
+  fetchRides();
+}, []);
+
+
+  // Get current user ID
+const currentUser = JSON.parse(localStorage.getItem('user'));
+const currentUserId = currentUser?._id;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-40">
@@ -359,36 +372,59 @@ const Search = ({ publishedRides = [] }) => {
         </motion.div>
       ) : rides.length > 0 ? (
         <motion.div>
-          {rides.map((ride) => (
-            <motion.div
-              key={ride._id}
-              className="bg-gray-900 rounded-xl p-6 mb-4 shadow-lg border border-blue-600 flex flex-col md:flex-row justify-between items-center"
-              initial={{ opacity: 1, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 1, y: 20 }}
-              style={{ opacity: 1 }}
-            >
-              <div>
-                <div className="text-xl font-bold text-blue-400">
-                  {ride.from} <ArrowRight className="inline mx-2" /> {ride.to}
-                </div>
-                <div className="text-white mt-1">
-                  <span>Date: {ride.date ? new Date(ride.date).toLocaleDateString() : "N/A"}</span>
-                  <span className="ml-4">Time: {ride.time ? `${ride.time.hour}:${ride.time.minute} ${ride.time.ampm}` : "N/A"}</span>
-                  <span className="ml-4">Seats: {ride.seats}</span>
-                </div>
-                <div className="text-blue-200 mt-1">
-                  Gender Preference: {ride.genderPreference || "Any"}
-                </div>
-              </div>
-              <button
-                className="mt-4 md:mt-0 md:ml-8 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow transition"
-                // onClick={() => handleBook(ride._id)} // Optional: add booking logic
+          {(() => {
+            const filteredRides = rides.filter(ride => {
+              // ride.driver can be an object or string, handle both
+              if (!ride.driver) return false;
+              if (typeof ride.driver === "object") {
+                return ride.driver._id !== currentUserId;
+              }
+              return ride.driver !== currentUserId;
+            });
+            
+            return filteredRides.length > 0 ? (
+              filteredRides.map((ride) => (
+                <motion.div
+                  key={ride._id}
+                  className="bg-gray-900 rounded-xl p-6 mb-4 shadow-lg border border-blue-600 flex flex-col md:flex-row justify-between items-center"
+                  initial={{ opacity: 1, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 1, y: 20 }}
+                  style={{ opacity: 1 }}
+                >
+                  <div>
+                    <div className="text-xl font-bold text-blue-400">
+                      {ride.from} <ArrowRight className="inline mx-2" /> {ride.to}
+                    </div>
+                    <div className="text-white mt-1">
+                      <span>Date: {ride.date ? new Date(ride.date).toLocaleDateString() : "N/A"}</span>
+                      <span className="ml-4">Time: {ride.time ? `${ride.time.hour}:${ride.time.minute} ${ride.time.ampm}` : "N/A"}</span>
+                      <span className="ml-4">Seats: {ride.seats}</span>
+                    </div>
+                    <div className="text-blue-200 mt-1">
+                      Gender Preference: {ride.genderPreference || "Any"}
+                    </div>
+                  </div>
+                  <button
+                    className="mt-4 md:mt-0 md:ml-8 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow transition"
+                    onClick={() => setSelectedRide(ride)}
+                  >
+                    Book
+                  </button>
+                </motion.div>
+              ))
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-gray-800/40 backdrop-blur-sm rounded-xl border border-gray-700/50 p-8 text-center"
               >
-                Book
-              </button>
-            </motion.div>
-          ))}
+                <Ban size={60} className="text-yellow-500/80 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-white mb-2">No Other Rides Available</h3>
+                <p className="text-gray-400">All current rides are published by you. Try searching for different locations or dates.</p>
+              </motion.div>
+            );
+          })()}
         </motion.div>
       ) : (
         <motion.div
@@ -406,6 +442,18 @@ const Search = ({ publishedRides = [] }) => {
   </div>
 </div>
       </div>
+
+      {selectedRide && (
+        <Booking
+          ride={selectedRide}
+          onClose={() => setSelectedRide(null)}
+          onBookingComplete={(booking) => {
+            // Handle successful booking
+            setSelectedRide(null);
+            // Optionally refresh rides list
+          }}
+        />
+      )}
     </div>
   );
 };
