@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, Search as SearchIcon, Ban, Car, Users, Clock, UserCircle, Star, ArrowRight, Bell } from 'lucide-react';
+import { Calendar, MapPin, Search as SearchIcon, Ban, Car, Users, Clock, UserCircle, Star, ArrowRight } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import mapboxgl from 'mapbox-gl';
@@ -24,6 +24,8 @@ const Search = ({ publishedRides = [] }) => {
   const [genderPreference, setGenderPreference] = useState("any");
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [selectedRide, setSelectedRide] = useState(null);
+  const [searchResult, setSearchResult] = useState([]);
+  const [searchPerformed, setSearchPerformed] = useState(false);
 
   const mapContainer = useRef(null);
 
@@ -149,18 +151,8 @@ const Search = ({ publishedRides = [] }) => {
 const currentUser = JSON.parse(localStorage.getItem('user'));
 const currentUserId = currentUser?._id;
 
-  const handleBookRide = (rideId) => {
-    // ...existing booking logic...
-
-    // Add notification
-    setNotifications(prev => [
-      ...prev,
-      { id: Date.now(), message: "A user booked your ride!" }
-    ]);
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-40">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-6">
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -175,29 +167,29 @@ const currentUserId = currentUser?._id;
         </p>
       </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-gray-800/40 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-700/50 overflow-hidden"
-            >
-          <div className="p-6 space-y-6">
-            <div className="relative">
-              <label className="flex items-center text-gray-300 text-sm font-medium mb-2">
-            <MapPin size={16} className="mr-1.5 text-blue-400" />
-            From
-              </label>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-gray-800/40 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-700/50 overflow-hidden"
+          >
+            <div className="p-6 space-y-6">
               <div className="relative">
-            <input
-              type="text"
-              className={`w-full p-4 bg-gray-700/50 border ${
-                activeInput === 'from' ? 'border-blue-500' : 'border-gray-600'
-              } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 text-white placeholder-gray-400`}
-              placeholder="Enter departure location"
-              value={from}
-              onChange={(e) => {
+                <label className="flex items-center text-gray-300 text-sm font-medium mb-2">
+                  <MapPin size={16} className="mr-1.5 text-blue-400" />
+                  From
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    className={`w-full p-4 bg-gray-700/50 border ${
+                      activeInput === 'from' ? 'border-blue-500' : 'border-gray-600'
+                    } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 text-white placeholder-gray-400`}
+                    placeholder="Enter departure location"
+                    value={from}
+                    onChange={(e) => {
                       setFrom(e.target.value);
                       fetchSuggestions(e.target.value, setFromSuggestions);
                     }}
@@ -532,18 +524,9 @@ const currentUserId = currentUser?._id;
           ride={selectedRide}
           onClose={() => setSelectedRide(null)}
           onBookingComplete={(booking) => {
+            // Handle successful booking
             setSelectedRide(null);
             // Optionally refresh rides list
-          }}
-          onSendNotification={(message, ride) => {
-            // Only notify the rider (publisher), not the passenger (user)
-            const riderId = typeof ride.publisher === "object" ? ride.publisher._id : ride.publisher;
-            if (currentUserId === riderId) return; // Don't notify yourself
-
-            setNotifications(prev => [
-              ...prev,
-              { id: Date.now(), message }
-            ]);
           }}
         />
       )}
