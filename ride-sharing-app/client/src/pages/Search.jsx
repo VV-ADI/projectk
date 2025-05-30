@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, Search as SearchIcon, Ban, Car, Users, Clock, UserCircle, Star, ArrowRight } from 'lucide-react';
 import DatePicker from 'react-datepicker';
@@ -6,7 +6,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import mapboxgl from 'mapbox-gl';
 import "mapbox-gl/dist/mapbox-gl.css";
 import axios from 'axios';
-import { useRef, useEffect } from 'react';
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoieWFzd2FudGgyMDA3IiwiYSI6ImNtOHp2Y2pmcTA4ZjUyc3E3bG9qd3QzN2EifQ.-o4c1vzZup3s8JMYdBtvxw";
 mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -61,17 +60,18 @@ const Search = ({ publishedRides = [] }) => {
   };
 
   const handleSearch = async () => {
-    if (!from || !to || !date) return;
-  
     setLoading(true);
-    setRides([]);
-
     try {
-      // Simulated API call - replace with actual endpoint
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setRides([]);
+      const response = await axios.get("http://localhost:5000/api/rides", {
+        params: {
+          from,
+          to,
+          date: date ? date.toISOString() : undefined,
+          genderPreference,
+        },
+      });
+      setRides(response.data.rides || []);
     } catch (error) {
-      console.error("Error fetching rides:", error);
       setRides([]);
     } finally {
       setLoading(false);
@@ -121,6 +121,18 @@ const Search = ({ publishedRides = [] }) => {
   const formatTime = (time) => {
     return `${time.hour}:${time.minute} ${time.ampm}`;
   };
+
+  useEffect(() => {
+    const fetchRides = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/rides");
+        setRides(response.data.rides || []);
+      } catch (error) {
+        setRides([]);
+      }
+    };
+    fetchRides();
+  }, []);
 
 ///////////////////////////////////Frontend Render////////////////////////////////
   return (
@@ -327,7 +339,7 @@ const Search = ({ publishedRides = [] }) => {
 
         <div className="lg:col-span-2 space-y-8">
           <div ref={mapContainer} id="map" className="h-80 w-full rounded-2xl overflow-hidden shadow-2xl border border-gray-700/50" />
-                
+
           <AnimatePresence mode="wait">
             {loading ? (
               <motion.div 

@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import VehicleModelSelector from './VehicleModelSelector';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { Calendar, MapPin, PlusCircle, CheckCircle, Loader, Car, Users, Clock, UserCircle } from 'lucide-react';
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoieWFzd2FudGgyMDA3IiwiYSI6ImNtOHp2Y2pmcTA4ZjUyc3E3bG9qd3QzN2EifQ.-o4c1vzZup3s8JMYdBtvxw";
 
-const Publish = ({ onRidePublished }) => {
+const Publish = ({ onRidePublished = () => {} }) => {
     const [from, setFrom] = useState("");
     const [to, setTo] = useState("");
     const [date, setDate] = useState(null);
@@ -18,8 +17,9 @@ const Publish = ({ onRidePublished }) => {
         minute: "00",
         ampm: "AM"
     });
+    ;
+
     const [seats, setSeats] = useState(1);
-    const [vehicleId, setVehicleId] = useState("");
     const [fromSuggestions, setFromSuggestions] = useState([]);
     const [toSuggestions, setToSuggestions] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -75,17 +75,29 @@ const Publish = ({ onRidePublished }) => {
             setLoading(false);
             return;
         }
+
+        // Validate form fields
+        if (!from || !to || !date || !time.hour || !time.minute || !time.ampm || !seats) {
+            setError("Please fill all fields before publishing.");
+            setLoading(false);
+            return;
+        }
     
         try {
             const rideData = {
                 from,
                 to,
                 date: date?.toISOString(),
-                time,
+                time: {
+                    hour: Number(time.hour),      // Convert to number
+                    minute: Number(time.minute),  // Convert to number
+                    ampm: time.ampm
+                },
                 seats,
-                vehicleId,
                 genderPreference
             };
+    
+            console.log("Submitting rideData:", rideData);
     
             const response = await axios.post(
                 "http://localhost:5000/api/rides",
@@ -109,13 +121,23 @@ const Publish = ({ onRidePublished }) => {
                 setDate(null);
                 setTime({ hour: "1", minute: "00", ampm: "AM" });
                 setSeats(1);
-                setVehicleId("");
                 setGenderPreference("any");
                 setCurrentStep(1);
             }
         } catch (error) {
-            console.error("Error publishing ride:", error);
-            setError(error.response?.data?.message || "Failed to publish ride");
+            if (error.response) {
+                // Backend responded with an error
+                console.error("Backend error:", error.response.data);
+                setError(error.response.data.message || "Failed to publish ride");
+            } else if (error.request) {
+                // No response from backend
+                console.error("No response from backend:", error.request);
+                setError("No response from server");
+            } else {
+                // Other errors
+                console.error("Error publishing ride:", error.message);
+                setError(error.message || "Failed to publish ride");
+            }
         } finally {
             setLoading(false);
         }
@@ -349,9 +371,16 @@ const Publish = ({ onRidePublished }) => {
                         className="space-y-6"
                     >
                         <h2 className="text-xl font-semibold mb-4 flex items-center">
-                            <Car className="mr-2" /> Vehicle Details
+                            Review & Publish
                         </h2>
-                        <VehicleModelSelector onVehicleSelect={(id) => setVehicleId(id)} />
+                        <div>
+                            <div className="mb-2"><strong>From:</strong> {from}</div>
+                            <div className="mb-2"><strong>To:</strong> {to}</div>
+                            <div className="mb-2"><strong>Date:</strong> {date ? date.toLocaleDateString() : ""}</div>
+                            <div className="mb-2"><strong>Time:</strong> {time.hour}:{time.minute} {time.ampm}</div>
+                            <div className="mb-2"><strong>Seats:</strong> {seats}</div>
+                            <div className="mb-2"><strong>Gender Preference:</strong> {genderPreference}</div>
+                        </div>
                     </motion.div>
                 );
             default:
@@ -383,7 +412,7 @@ const Publish = ({ onRidePublished }) => {
                                 {step}
                             </div>
                             <div className="ml-2">
-                                {step === 1 ? 'Route' : step === 2 ? 'Schedule' : 'Vehicle'}
+                                {step === 1 ? 'Route' : step === 2 ? 'Schedule' : 'Review'}
                             </div>
                         </motion.div>
                     ))}
