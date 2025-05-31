@@ -1,53 +1,48 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, Search as SearchIcon, Ban, Car, Users, Clock, UserCircle, Star, ArrowRight, Bell, Coins } from 'lucide-react';
+import { Calendar, MapPin, Search as SearchIcon, Ban, Car, Users, Clock, UserCircle, Star, ArrowRight } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import mapboxgl from 'mapbox-gl';
 import "mapbox-gl/dist/mapbox-gl.css";
 import axios from 'axios';
-import Booking from './Booking';
+import { useRef, useEffect } from 'react';
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoieWFzd2FudGgyMDA3IiwiYSI6ImNtOHp2Y2pmcTA4ZjUyc3E3bG9qd3QzN2EifQ.-o4c1vzZup3s8JMYdBtvxw";
 mapboxgl.accessToken = MAPBOX_TOKEN;
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const Search = ({ publishedRides = [] }) => {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [date, setDate] = useState(null);
-  const [coins] = useState(10);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rides, setRides] = useState([]);
   const [fromSuggestions, setFromSuggestions] = useState([]);
   const [toSuggestions, setToSuggestions] = useState([]);
+  const [mapLoading, setMapLoading] = useState(true);
   const [activeInput, setActiveInput] = useState(null);
   const [genderPreference, setGenderPreference] = useState("any");
   const [isLocationLoading, setIsLocationLoading] = useState(false);
-  const [selectedRide, setSelectedRide] = useState(null);
-  const [searchResult, setSearchResult] = useState([]);
-  const [searchPerformed, setSearchPerformed] = useState(false);
 
   const mapContainer = useRef(null);
 
   useEffect(() => {
     if (!mapContainer.current) return;
     const map = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/satellite-streets-v12",
-      center: [80.6480, 16.5062],
-      zoom: 11,
-    });
+  container: mapContainer.current,
+  style: "mapbox://styles/mapbox/dark-v11", // dark theme
+  center: [80.6480, 16.5062], // Vijayawada
+  zoom: 11,
+});
     return () => map.remove();
-  }, []);
-
+  }, []);
+  
   const fetchSuggestions = async (query, setSuggestions) => {
     if (!query) {
       setSuggestions([]);
       return;
     }
+
     try {
       const response = await axios.get(
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json`,
@@ -66,29 +61,18 @@ const Search = ({ publishedRides = [] }) => {
   };
 
   const handleSearch = async () => {
+    if (!from || !to || !date) return;
+  
     setLoading(true);
-    setSearchPerformed(false);
-    setSearchResult([]);
+    setRides([]);
+
     try {
-      const searchParams = {
-        from,
-        to,
-        date: date ? date.toISOString() : undefined,
-        genderPreference,
-      };
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/rides/search`, {
-        params: searchParams
-      });
-      const allRides = response.data.rides || [];
-      const filtered = allRides.filter(ride =>
-        ride.from.trim().toLowerCase() === from.trim().toLowerCase() &&
-        ride.to.trim().toLowerCase() === to.trim().toLowerCase()
-      );
-      setSearchResult(filtered);
-      setSearchPerformed(true);
+      // Simulated API call - replace with actual endpoint
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setRides([]);
     } catch (error) {
-      setSearchResult([]);
-      setSearchPerformed(true);
+      console.error("Error fetching rides:", error);
+      setRides([]);
     } finally {
       setLoading(false);
     }
@@ -99,7 +83,9 @@ const Search = ({ publishedRides = [] }) => {
       alert("Geolocation is not supported by your browser.");
       return;
     }
+
     setIsLocationLoading(true);
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
@@ -112,6 +98,7 @@ const Search = ({ publishedRides = [] }) => {
               },
             }
           );
+
           if (response.data.features.length > 0) {
             setFrom(response.data.features[0].place_name);
           }
@@ -129,80 +116,27 @@ const Search = ({ publishedRides = [] }) => {
     );
   };
 
-  useEffect(() => {
-    const fetchRides = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(`${API_URL}/api/rides/others`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setRides(response.data.rides || []);
-      } catch (error) {
-        console.error("Failed to fetch rides:", error);
-        setRides([]);
-      }
-    };
-    fetchRides();
-  }, []);
-
-
-  // Get current user ID
-  const currentUser = JSON.parse(localStorage.getItem('user'));
-  const currentUserId = currentUser?._id;
+  const formatTime = (time) => {
+    return `${time.hour}:${time.minute} ${time.ampm}`;
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 sm:p-6 relative">
-      {/* Top bar for notifications and coins */}
-      <div className="w-full flex justify-end items-center space-x-2 sm:space-x-4 mb-4 sm:mb-8">
-        {/* Notifications Button */}
-        <div className="relative">
-          <button
-            className="relative p-2 sm:p-3 rounded-full bg-gray-800 hover:bg-gray-700 transition"
-            onClick={() => setShowNotifications((v) => !v)}
-          >
-            <Bell size={18} className="text-blue-400 sm:w-6 sm:h-6 w-5 h-5" />
-            <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 sm:w-5 sm:h-5 bg-red-500 text-[10px] sm:text-xs text-white rounded-full flex items-center justify-center font-bold">1</span>
-          </button>
-          {/* Notification Dropdown */}
-          {showNotifications && (
-            <div className="absolute right-0 mt-2 w-48 sm:w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-30">
-              <div className="p-3 border-b border-gray-700 font-semibold text-white text-xs sm:text-base">Notifications</div>
-              <div className="p-3 text-gray-200 text-xs sm:text-sm">
-                <div className="flex items-start space-x-2">
-                  <span className="mt-1"><Bell size={12} className="text-blue-400 sm:w-4 sm:h-4 w-3 h-3" /></span>
-                  <div>
-                    <div className="font-medium">Welcome!</div>
-                    <div className="text-xs sm:text-sm text-gray-400">Welcome to RideShare. Start searching for rides now!</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-        {/* Coins Button */}
-        <button className="flex items-center px-2.5 sm:px-4 py-1 sm:py-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 font-bold shadow hover:from-yellow-300 hover:to-yellow-500 transition text-xs sm:text-base">
-          <Coins size={16} className="mr-1 sm:mr-2 w-4 h-4 sm:w-5 sm:h-5" />
-          {coins}
-        </button>
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-40">
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="mb-8 sm:mb-12 text-center"
+        className="mb-12 text-center"
       >
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-3 bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
+        <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
           Find Your Perfect Ride
         </h1>
-        <p className="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto">
+        <p className="text-gray-400 text-lg max-w-2xl mx-auto">
           Discover convenient and affordable rides with friendly drivers heading your way
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -210,7 +144,7 @@ const Search = ({ publishedRides = [] }) => {
             transition={{ duration: 0.5 }}
             className="bg-gray-800/40 backdrop-blur-lg rounded-2xl shadow-xl border border-gray-700/50 overflow-hidden"
           >
-            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <div className="p-6 space-y-6">
               <div className="relative">
                 <label className="flex items-center text-gray-300 text-sm font-medium mb-2">
                   <MapPin size={16} className="mr-1.5 text-blue-400" />
@@ -386,185 +320,123 @@ const Search = ({ publishedRides = [] }) => {
           </motion.div>
         </div>
 
-        <div
-          className="lg:col-span-2 bg-gray-900 rounded-2xl p-4 sm:p-6 mt-6 lg:mt-0"
-          style={{ opacity: 1 }}
-        >
-          <div ref={mapContainer} id="map" className="h-56 sm:h-80 w-full rounded-2xl overflow-hidden shadow-2xl border border-gray-700/50 mb-6 sm:mb-8" />
+        <div className="lg:col-span-2 space-y-8">
+          <div ref={mapContainer} id="map" className="h-80 w-full rounded-2xl overflow-hidden shadow-2xl border border-gray-700/50" />
 
-          <h2 className="text-2xl font-bold mb-4 text-white">Available Rides</h2>
-          <div
-            className="max-h-[420px] overflow-y-auto pr-2 custom-scrollbar"
-            style={{ scrollbarWidth: "thin", scrollbarColor: "#6366f1 #1f2937" }}
-          >
-            <AnimatePresence mode="wait">
-              {loading ? (
-                <motion.div
-                  key="loading"
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 1 }}
-                  className="flex justify-center py-12"
-                >
-                  <div className="relative w-20 h-20">
-                    <div className="absolute top-0 left-0 w-full h-full rounded-full border-4 border-t-blue-500 border-r-transparent border-b-indigo-500 border-l-transparent animate-spin"></div>
-                    <div className="absolute top-2 left-2 w-16 h-16 rounded-full border-4 border-t-transparent border-r-purple-500 border-b-transparent border-l-blue-400 animate-spin-slow"></div>
-                  </div>
-                </motion.div>
-              ) : searchPerformed ? (
-                searchResult.length > 0 ? (
-                  <motion.div>
-                    {searchResult.filter(ride => {
-                      if (!ride.driver) return false;
-                      if (typeof ride.driver === "object") {
-                        return ride.driver._id !== currentUserId;
-                      }
-                      return ride.driver !== currentUserId;
-                    }).length > 0 ? (
-                      searchResult.filter(ride => {
-                        if (!ride.driver) return false;
-                        if (typeof ride.driver === "object") {
-                          return ride.driver._id !== currentUserId;
-                        }
-                        return ride.driver !== currentUserId;
-                      }).map((ride) => (
-                        <motion.div
-                          key={ride._id}
-                          className="bg-gray-900 rounded-xl p-6 mb-4 shadow-lg border border-blue-600 flex flex-col md:flex-row justify-between items-center"
-                          initial={{ opacity: 1, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 1, y: 20 }}
-                          style={{ opacity: 1 }}
-                        >
-                          <div>
-                            <div className="text-xl font-bold text-blue-400">
-                              {ride.from} <ArrowRight className="inline mx-2" /> {ride.to}
-                            </div>
-                            <div className="text-white mt-1">
-                              <span>Date: {ride.date ? new Date(ride.date).toLocaleDateString() : "N/A"}</span>
-                              <span className="ml-4">Time: {ride.time ? `${ride.time.hour}:${ride.time.minute} ${ride.time.ampm}` : "N/A"}</span>
-                              <span className="ml-4">Seats: {ride.seats}</span>
-                            </div>
-                            <div className="text-blue-200 mt-1">
-                              Gender Preference: {ride.genderPreference || "Any"}
-                            </div>
-                          </div>
-                          <button
-                            className="mt-4 md:mt-0 md:ml-8 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow transition"
-                            onClick={() => setSelectedRide(ride)}
-                          >
-                            Book
-                          </button>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-gray-800/40 backdrop-blur-sm rounded-xl border border-gray-700/50 p-8 text-center"
-                      >
-                        <Ban size={60} className="text-yellow-500/80 mx-auto mb-4" />
-                        <h3 className="text-2xl font-bold text-white mb-2">No Other Rides Available</h3>
-                        <p className="text-gray-400">All current rides are published by you. Try searching for different locations or dates.</p>
-                      </motion.div>
-                    )}
-                  </motion.div>
-                ) : (
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div 
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex justify-center py-12"
+              >
+                <div className="relative w-20 h-20">
+                  <div className="absolute top-0 left-0 w-full h-full rounded-full border-4 border-t-blue-500 border-r-transparent border-b-indigo-500 border-l-transparent animate-spin"></div>
+                  <div className="absolute top-2 left-2 w-16 h-16 rounded-full border-4 border-t-transparent border-r-purple-500 border-b-transparent border-l-blue-400 animate-spin-slow"></div>
+                </div>
+              </motion.div>
+            ) : rides.length > 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="space-y-4"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-white">Available Rides</h2>
+                  <span className="text-sm text-gray-400">{rides.length} rides found</span>
+                </div>
+                
+                {rides.map((ride) => (
                   <motion.div
-                    initial={{ opacity: 1, scale: 1 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 1, scale: 0.9 }}
-                    className="bg-gray-800/40 backdrop-blur-sm rounded-xl border border-gray-700/50 p-8 text-center"
+                    key={ride._id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="bg-gray-800/40 backdrop-blur-sm rounded-xl border border-gray-700/50 overflow-hidden hover:border-blue-500/30 transition-all duration-300"
                   >
-                    <Ban size={60} className="text-red-500/80 mx-auto mb-4" />
-                    <h3 className="text-2xl font-bold text-white mb-2">No Rides Available</h3>
-                    <p className="text-gray-400">Try different locations or dates</p>
-                  </motion.div>
-                )
-              ) : rides.length > 0 ? (
-                <motion.div>
-                  {(() => {
-                    const filteredRides = rides.filter(ride => {
-                      // ride.driver can be an object or string, handle both
-                      if (!ride.driver) return false;
-                      if (typeof ride.driver === "object") {
-                        return ride.driver._id !== currentUserId;
-                      }
-                      return ride.driver !== currentUserId;
-                    });
-                    
-                    return filteredRides.length > 0 ? (
-                      filteredRides.map((ride) => (
-                        <motion.div
-                          key={ride._id}
-                          className="bg-gray-900 rounded-xl p-6 mb-4 shadow-lg border border-blue-600 flex flex-col md:flex-row justify-between items-center"
-                          initial={{ opacity: 1, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 1, y: 20 }}
-                          style={{ opacity: 1 }}
-                        >
-                          <div>
-                            <div className="text-xl font-bold text-blue-400">
-                              {ride.from} <ArrowRight className="inline mx-2" /> {ride.to}
-                            </div>
-                            <div className="text-white mt-1">
-                              <span>Date: {ride.date ? new Date(ride.date).toLocaleDateString() : "N/A"}</span>
-                              <span className="ml-4">Time: {ride.time ? `${ride.time.hour}:${ride.time.minute} ${ride.time.ampm}` : "N/A"}</span>
-                              <span className="ml-4">Seats: {ride.seats}</span>
-                            </div>
-                            <div className="text-blue-200 mt-1">
-                              Gender Preference: {ride.genderPreference || "Any"}
-                            </div>
+                    <div className="p-5">
+                      <div className="flex items-center space-x-4">
+                        <div className="relative">
+                          <img
+                            src={ride.driver?.profileImage}
+                            alt={ride.driver?.name}
+                            className="w-14 h-14 rounded-full object-cover border-2 border-blue-500"
+                          />
+                          <div className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-gray-800"></div>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-white">{ride.driver?.name}</h3>
+                          <div className="flex items-center text-yellow-400">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                size={14}
+                                className={i < 4 ? "fill-yellow-400" : "fill-gray-600"}
+                              />
+                            ))}
+                            <span className="ml-1 text-gray-400">(4.0)</span>
                           </div>
-                          <button
-                            className="mt-4 md:mt-0 md:ml-8 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow transition"
-                            onClick={() => setSelectedRide(ride)}
-                          >
-                            Book
-                          </button>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-gray-800/40 backdrop-blur-sm rounded-xl border border-gray-700/50 p-8 text-center"
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-6">
+                        <div className="flex items-center space-x-2">
+                          <Car size={18} className="text-blue-400" />
+                          <span className="text-gray-300">{ride.vehicle?.model}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Users size={18} className="text-blue-400" />
+                          <span className="text-gray-300">{ride.seats} seats</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Clock size={18} className="text-blue-400" />
+                          <span className="text-gray-300">{formatTime(ride.time)}</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex items-center space-x-4">
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-400">From</p>
+                          <p className="font-medium text-white">{ride.from}</p>
+                        </div>
+                        <ArrowRight className="text-gray-400" />
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-400">To</p>
+                          <p className="font-medium text-white">{ride.to}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between px-5 py-3 bg-gray-700/20 border-t border-gray-700/50">
+                      <div className="text-lg font-bold text-white">₹1,299</div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-5 py-2 rounded-lg font-medium transition-all duration-300 shadow-md hover:shadow-blue-500/20"
                       >
-                        <Ban size={60} className="text-yellow-500/80 mx-auto mb-4" />
-                        <h3 className="text-2xl font-bold text-white mb-2">No Other Rides Available</h3>
-                        <p className="text-gray-400">All current rides are published by you. Try searching for different locations or dates.</p>
-                      </motion.div>
-                    );
-                  })()}
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 1, scale: 1 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 1, scale: 0.9 }}
-                  className="bg-gray-800/40 backdrop-blur-sm rounded-xl border border-gray-700/50 p-8 text-center"
-                >
-                  <Ban size={60} className="text-red-500/80 mx-auto mb-4" />
-                  <h3 className="text-2xl font-bold text-white mb-2">No Rides Available</h3>
-                  <p className="text-gray-400">Try different locations or dates</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                        Book Now 
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-gray-800/40 backdrop-blur-sm rounded-xl border border-gray-700/50 p-8 text-center"
+              >
+                <Ban size={60} className="text-red-500/80 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-white mb-2">No Rides Available</h3>
+                <p className="text-gray-400">Try different locations or dates</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
-
-      {selectedRide && (
-        <Booking
-          ride={selectedRide}
-          onClose={() => setSelectedRide(null)}
-          onBookingComplete={(booking) => {
-            // Handle successful booking
-            setSelectedRide(null);
-            // Optionally refresh rides list
-          }}
-        />
-      )}
     </div>
   );
 };

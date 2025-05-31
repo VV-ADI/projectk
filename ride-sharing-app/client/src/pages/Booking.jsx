@@ -18,7 +18,7 @@ const Booking = ({ ride, onClose, onBookingComplete, onSendNotification }) => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/bookings`,
+        'http://localhost:5000/api/bookings',
         {
           rideId: ride._id,
           passengers,
@@ -31,17 +31,18 @@ const Booking = ({ ride, onClose, onBookingComplete, onSendNotification }) => {
       );
 
       if (response.data.success) {
-        setError("");
-        // Show success message and close after a short delay
-        setTimeout(() => {
-          onBookingComplete(response.data.booking);
-          onClose();
-        }, 1200);
-        alert("Ride has been booked");
-        return;
+        // Notify the rider (publisher) after successful booking
+        if (onSendNotification) {
+          onSendNotification(
+            `You have a new booking request for your ride from ${ride.from} to ${ride.to}. Please confirm or reject.`,
+            ride
+          );
+        }
+        onBookingComplete(response.data.booking);
+        onClose();
       }
     } catch (error) {
-      setError('Booked successfully');
+      setError(error.response?.data?.message || 'Failed to book ride');
     } finally {
       setLoading(false);
     }
@@ -70,7 +71,7 @@ const Booking = ({ ride, onClose, onBookingComplete, onSendNotification }) => {
         <h2 className="text-2xl font-bold mb-6 text-white">Book Your Ride</h2>
 
         {error && (
-          <div className="mb-4 p-3 bg-green-500/20 border border-green-500 rounded-lg text-green-400">
+          <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-400">
             {error}
           </div>
         )}
@@ -149,8 +150,3 @@ const Booking = ({ ride, onClose, onBookingComplete, onSendNotification }) => {
 };
 
 export default Booking;
-
-// Replace all API calls and image URLs with environment variable usage
-// Example:
-// axios.get(`${process.env.REACT_APP_API_URL}/api/bookings`)
-// <img src={`${process.env.REACT_APP_API_URL}${booking.imageUrl}`} />
