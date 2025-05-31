@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, Search as SearchIcon, Ban, Car, Users, Clock, UserCircle, Star, ArrowRight } from 'lucide-react';
+import { Calendar, MapPin, Search as SearchIcon, Ban, Car, Users, Clock, UserCircle, Star, ArrowRight, Bell, Coins } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import mapboxgl from 'mapbox-gl';
 import "mapbox-gl/dist/mapbox-gl.css";
 import axios from 'axios';
-import Booking from './Booking';  // Correct case-sensitive import
+import Booking from './Booking';
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoieWFzd2FudGgyMDA3IiwiYSI6ImNtOHp2Y2pmcTA4ZjUyc3E3bG9qd3QzN2EifQ.-o4c1vzZup3s8JMYdBtvxw";
 mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -17,11 +17,12 @@ const Search = ({ publishedRides = [] }) => {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [date, setDate] = useState(null);
+  const [coins] = useState(10);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rides, setRides] = useState([]);
   const [fromSuggestions, setFromSuggestions] = useState([]);
   const [toSuggestions, setToSuggestions] = useState([]);
-  const [mapLoading, setMapLoading] = useState(true);
   const [activeInput, setActiveInput] = useState(null);
   const [genderPreference, setGenderPreference] = useState("any");
   const [isLocationLoading, setIsLocationLoading] = useState(false);
@@ -34,20 +35,19 @@ const Search = ({ publishedRides = [] }) => {
   useEffect(() => {
     if (!mapContainer.current) return;
     const map = new mapboxgl.Map({
-  container: mapContainer.current,
-  style: "mapbox://styles/mapbox/satellite-streets-v12", // dark theme
-  center: [80.6480, 16.5062], // Vijayawada
-  zoom: 11,
-});
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/satellite-streets-v12",
+      center: [80.6480, 16.5062],
+      zoom: 11,
+    });
     return () => map.remove();
-  }, []);
-  
+  }, []);
+
   const fetchSuggestions = async (query, setSuggestions) => {
     if (!query) {
       setSuggestions([]);
       return;
     }
-
     try {
       const response = await axios.get(
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json`,
@@ -70,19 +70,16 @@ const Search = ({ publishedRides = [] }) => {
     setSearchPerformed(false);
     setSearchResult([]);
     try {
-      // Build searchParams from current state
       const searchParams = {
         from,
         to,
         date: date ? date.toISOString() : undefined,
         genderPreference,
       };
-      // Fetch all rides from backend
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/rides/search`, {
         params: searchParams
       });
       const allRides = response.data.rides || [];
-      // Filter rides by entry and exit points (case-insensitive, trimmed)
       const filtered = allRides.filter(ride =>
         ride.from.trim().toLowerCase() === from.trim().toLowerCase() &&
         ride.to.trim().toLowerCase() === to.trim().toLowerCase()
@@ -102,9 +99,7 @@ const Search = ({ publishedRides = [] }) => {
       alert("Geolocation is not supported by your browser.");
       return;
     }
-
     setIsLocationLoading(true);
-
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
@@ -117,7 +112,6 @@ const Search = ({ publishedRides = [] }) => {
               },
             }
           );
-
           if (response.data.features.length > 0) {
             setFrom(response.data.features[0].place_name);
           }
@@ -133,10 +127,6 @@ const Search = ({ publishedRides = [] }) => {
         setIsLocationLoading(false);
       }
     );
-  };
-
-  const formatTime = (time) => {
-    return `${time.hour}:${time.minute} ${time.ampm}`;
   };
 
   useEffect(() => {
@@ -159,11 +149,45 @@ const Search = ({ publishedRides = [] }) => {
 
 
   // Get current user ID
-const currentUser = JSON.parse(localStorage.getItem('user'));
-const currentUserId = currentUser?._id;
+  const currentUser = JSON.parse(localStorage.getItem('user'));
+  const currentUserId = currentUser?._id;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-6 relative">
+      {/* Top right buttons */}
+      <div className="absolute top-8 right-12 flex items-center space-x-4 z-20">
+        {/* Notifications Button */}
+        <div className="relative">
+          <button
+            className="relative p-3 rounded-full bg-gray-800 hover:bg-gray-700 transition"
+            onClick={() => setShowNotifications((v) => !v)}
+          >
+            <Bell size={22} className="text-blue-400" />
+            <span className="absolute top-2 right-2 w-5 h-5 bg-red-500 text-xs text-white rounded-full flex items-center justify-center font-bold">1</span>
+          </button>
+          {/* Notification Dropdown */}
+          {showNotifications && (
+            <div className="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-30">
+              <div className="p-4 border-b border-gray-700 font-semibold text-white">Notifications</div>
+              <div className="p-4 text-gray-200">
+                <div className="flex items-start space-x-2">
+                  <span className="mt-1"><Bell size={16} className="text-blue-400" /></span>
+                  <div>
+                    <div className="font-medium">Welcome!</div>
+                    <div className="text-sm text-gray-400">Welcome to RideShare. Start searching for rides now!</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Coins Button */}
+        <button className="flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 font-bold shadow hover:from-yellow-300 hover:to-yellow-500 transition">
+          <Coins size={20} className="mr-2" />
+          {coins}
+        </button>
+      </div>
+
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
