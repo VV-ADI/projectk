@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Send, MessageSquare, Search, User, Phone, Video, MoreVertical, ArrowLeft, MapPin, Calendar, Image, Smile, Paperclip, Mic } from 'lucide-react';
+import { Send, MessageSquare, Search, Phone, Video, MoreVertical, ArrowLeft, MapPin, Calendar, Image, Smile, Paperclip, Mic } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const SYSTEM_USER = {
@@ -279,15 +279,15 @@ function App() {
               )}
             </p>
           </div>
-          <div className="flex items-center space-x-4">
-            <button className="text-gray-400 hover:text-white transition-colors">
-              <Phone size={20} />
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <button className="text-gray-400 hover:text-white transition-colors p-2 sm:p-0 rounded-full sm:rounded-none bg-gray-800 sm:bg-transparent">
+              <Phone size={18} className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <button className="text-gray-400 hover:text-white transition-colors">
-              <Video size={20} />
+            <button className="text-gray-400 hover:text-white transition-colors p-2 sm:p-0 rounded-full sm:rounded-none bg-gray-800 sm:bg-transparent">
+              <Video size={18} className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <button className="text-gray-400 hover:text-white transition-colors">
-              <MoreVertical size={20} />
+            <button className="text-gray-400 hover:text-white transition-colors p-2 sm:p-0 rounded-full sm:rounded-none bg-gray-800 sm:bg-transparent">
+              <MoreVertical size={18} className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
@@ -340,15 +340,15 @@ function App() {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700 bg-gray-800">
-          <form onSubmit={handleSendMessage} className="flex items-center space-x-4 pb-20">
-            <div className="flex items-center space-x-2">
+        <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 border-t border-gray-700 bg-gray-800">
+          <form onSubmit={handleSendMessage} className="flex items-center space-x-2 sm:space-x-4 pb-16 sm:pb-20">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               <button
                 type="button"
                 className="text-gray-400 hover:text-white transition-colors"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Paperclip size={20} />
+                <Paperclip size={18} className="sm:w-5 sm:h-5 w-4 h-4" />
               </button>
               <input
                 type="file"
@@ -360,35 +360,36 @@ function App() {
                 type="button"
                 className="text-gray-400 hover:text-white transition-colors"
               >
-                <Image size={20} />
+                <Image size={18} className="sm:w-5 sm:h-5 w-4 h-4" />
               </button>
               <button
                 type="button"
                 className="text-gray-400 hover:text-white transition-colors"
               >
-                <Smile size={20} />
+                <Smile size={18} className="sm:w-5 sm:h-5 w-4 h-4" />
               </button>
             </div>
             <input
               type="text"
               placeholder="Type a message..."
-              className="flex-1 bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 bg-gray-700 text-white rounded-lg px-2 sm:px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
             />
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               <button
                 type="button"
                 className="text-gray-400 hover:text-white transition-colors"
               >
-                <Mic size={20} />
+                <Mic size={18} className="sm:w-5 sm:h-5 w-4 h-4" />
               </button>
               <button
                 type="submit"
-                className="bg-blue-600 text-white rounded-lg p-2 hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-blue-600 text-white rounded-lg p-2 sm:p-2.5 hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 disabled={!newMessage.trim() || !selectedAccount}
+                style={{ minWidth: 36, minHeight: 36 }}
               >
-                <Send size={20} />
+                <Send size={18} className="sm:w-5 sm:h-5 w-4 h-4" />
               </button>
             </div>
           </form>
