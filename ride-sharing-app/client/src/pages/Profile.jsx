@@ -3,6 +3,11 @@ import { Camera, Loader, Save, User, Phone, Calendar, UserCircle, MapPin, Car, E
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 
+// Responsive icon/button size classes for mobile
+const iconButtonMobile = "px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base";
+const iconSizeMobile = "sm:w-5 sm:h-5 w-4 h-4";
+const svgSizeMobile = "w-4 h-4 sm:w-5 sm:h-5";
+
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [user, setUser] = useState(null);
@@ -162,16 +167,16 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-6 md:p-12 lg:p-20 pb-40">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-3 sm:p-6 md:p-12 lg:p-20 pb-24 sm:pb-40">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto mt-16"
+        className="max-w-4xl mx-auto mt-8 sm:mt-16"
       >
         <motion.h1 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text"
+          className="text-2xl sm:text-4xl font-bold text-center mb-6 sm:mb-8 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text"
         >
           Profile Settings
         </motion.h1>
@@ -179,9 +184,9 @@ const Profile = () => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-gray-800/50 backdrop-blur-lg p-8 rounded-2xl shadow-2xl border border-gray-700"
+          className="bg-gray-800/50 backdrop-blur-lg p-4 sm:p-8 rounded-2xl shadow-2xl border border-gray-700"
         >
-          <div className="flex justify-center mb-8">
+          <div className="flex flex-col items-center mb-8">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -269,7 +274,7 @@ function ViewProfile({ formData, setIsEditing, handleWhatsAppSOS }) {
       exit={{ opacity: 0, y: -20 }}
       className="space-y-8"
     >
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-2">
         <h2 className="text-2xl font-semibold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
           Profile Information
         </h2>
@@ -278,18 +283,18 @@ function ViewProfile({ formData, setIsEditing, handleWhatsAppSOS }) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 shadow-lg hover:shadow-blue-500/20"
+            className={`flex items-center gap-2 ${iconButtonMobile} bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 shadow-lg hover:shadow-blue-500/20`}
           >
-            <Edit2 size={18} />
+            <Edit2 size={16} className={iconSizeMobile} />
             Edit Profile
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleWhatsAppSOS}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 transition-all duration-300 shadow-lg hover:shadow-green-500/20"
+            className={`flex items-center gap-2 ${iconButtonMobile} bg-green-600 rounded-lg hover:bg-green-700 transition-all duration-300 shadow-lg hover:shadow-green-500/20`}
           >
-            <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className='w-5 h-5'><path strokeLinecap='round' strokeLinejoin='round' d='M7.5 12h.008v.008H7.5V12zm4.5 0h.008v.008H12V12zm4.5 0h.008v.008H16.5V12z' /><path strokeLinecap='round' strokeLinejoin='round' d='M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9zm-9 3.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z' /></svg>
+            <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className={svgSizeMobile}><path strokeLinecap='round' strokeLinejoin='round' d='M7.5 12h.008v.008H7.5V12zm4.5 0h.008v.008H12V12zm4.5 0h.008v.008H16.5V12z' /><path strokeLinecap='round' strokeLinejoin='round' d='M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9zm-9 3.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z' /></svg>
             WhatsApp SOS
           </motion.button>
         </div>
