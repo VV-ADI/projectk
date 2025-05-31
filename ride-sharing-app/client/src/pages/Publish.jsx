@@ -29,21 +29,6 @@ const Publish = ({ onRidePublished = () => {} }) => {
     const [error, setError] = useState(null);
     const [genderPreference, setGenderPreference] = useState("any");
 
-    useEffect(() => {
-        const getTestToken = async () => {
-            try {
-                const response = await axios.post(
-      `${process.env.REACT_APP_API_URL}/api/auth/login`,
-      { email, password }
-    );
-                localStorage.setItem('token', response.data.token);
-            } catch (error) {
-                console.error('Error getting test token:', error);
-            }
-        };
-        getTestToken();
-    }, []);
-
     const fetchSuggestions = async (query, setSuggestions) => {
         if (!query) {
             setSuggestions([]);
