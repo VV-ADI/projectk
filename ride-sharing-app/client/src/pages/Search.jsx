@@ -70,8 +70,17 @@ const Search = ({ publishedRides = [] }) => {
     setSearchPerformed(false);
     setSearchResult([]);
     try {
+      // Build searchParams from current state
+      const searchParams = {
+        from,
+        to,
+        date: date ? date.toISOString() : undefined,
+        genderPreference,
+      };
       // Fetch all rides from backend
-      const response = await axios.get(`${API_URL}/api/rides`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/rides/search`, {
+        params: searchParams
+      });
       const allRides = response.data.rides || [];
       // Filter rides by entry and exit points (case-insensitive, trimmed)
       const filtered = allRides.filter(ride =>
