@@ -123,6 +123,25 @@ const Profile = () => {
     }
   };
 
+  const handleWhatsAppSOS = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const mapsUrl = `https://maps.google.com/?q=${latitude},${longitude}`;
+        const message = encodeURIComponent(`SOS! I need help. My location: ${mapsUrl}`);
+        const whatsappUrl = `https://wa.me/?text=${message}`;
+        window.open(whatsappUrl, '_blank');
+      },
+      (error) => {
+        alert('Unable to retrieve your location.');
+      }
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -233,7 +252,7 @@ const Profile = () => {
                 setActiveSection={setActiveSection}
               />
             ) : (
-              <ViewProfile formData={formData} setIsEditing={setIsEditing} />
+              <ViewProfile formData={formData} setIsEditing={setIsEditing} handleWhatsAppSOS={handleWhatsAppSOS} />
             )}
           </AnimatePresence>
         </motion.div>
@@ -242,7 +261,7 @@ const Profile = () => {
   );
 };
 
-function ViewProfile({ formData, setIsEditing }) {
+function ViewProfile({ formData, setIsEditing, handleWhatsAppSOS }) {
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -254,15 +273,26 @@ function ViewProfile({ formData, setIsEditing }) {
         <h2 className="text-2xl font-semibold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
           Profile Information
         </h2>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setIsEditing(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 shadow-lg hover:shadow-blue-500/20"
-        >
-          <Edit2 size={18} />
-          Edit Profile
-        </motion.button>
+        <div className="flex gap-2">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsEditing(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 shadow-lg hover:shadow-blue-500/20"
+          >
+            <Edit2 size={18} />
+            Edit Profile
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleWhatsAppSOS}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 transition-all duration-300 shadow-lg hover:shadow-green-500/20"
+          >
+            <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className='w-5 h-5'><path strokeLinecap='round' strokeLinejoin='round' d='M7.5 12h.008v.008H7.5V12zm4.5 0h.008v.008H12V12zm4.5 0h.008v.008H16.5V12z' /><path strokeLinecap='round' strokeLinejoin='round' d='M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9zm-9 3.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z' /></svg>
+            WhatsApp SOS
+          </motion.button>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">

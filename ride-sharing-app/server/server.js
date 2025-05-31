@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 import User from './models/User.js';
 import Vehicle from './models/Vehicle.js';
 import Ride from './models/Ride.js';
+import Booking from './models/Booking.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -395,6 +396,36 @@ app.get("/api/rides/test", async (req, res) => {
         res.json({ success: true, rides });
     } catch (error) {
         res.status(500).json({ success: false, message: "Error fetching rides" });
+    }
+});
+
+// Book a Ride
+app.post("/api/bookings", authMiddleware, async (req, res) => {
+    try {
+        const { rideId, passengers, phone, message } = req.body;
+        const userId = req.userId;
+        // Find the ride
+        const ride = await Ride.findById(rideId);
+        if (!ride) {
+            return res.status(404).json({ success: false, message: "Ride not found" });
+        }
+        // Create booking
+        const booking = new Booking({
+            ride: ride._id,
+            user: userId,
+            passengers,
+            phone,
+            message,
+            price: 0, // Set price logic if needed
+            status: 'confirmed'
+        });
+        await booking.save();
+        // Delete the ride after booking
+        await Ride.findByIdAndDelete(rideId);
+        res.json({ success: true, message: "Ride has been booked", booking });
+    } catch (error) {
+        console.error("Booking error:", error);
+        res.status(500).json({ success: false, message: "Failed to book ride" });
     }
 });
 
